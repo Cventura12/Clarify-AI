@@ -1,0 +1,50 @@
+{
+  "name": "clarify",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "prisma": "prisma",
+    "db:migrate": "prisma migrate dev --name init",
+    "db:generate": "prisma generate",
+    "db:seed": "prisma db seed",
+    "db:studio": "prisma studio",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest",
+    "test:ci": "vitest run",
+    "test:e2e": "playwright test",
+    "perf:lighthouse": "lighthouse http://localhost:3000 --quiet --preset=desktop"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.cjs"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.18.0",
+    "next": "^14.2.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "next-auth": "^4.24.7"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "autoprefixer": "^10.4.0",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "^14.2.0",
+    "postcss": "^8.4.0",
+    "prisma": "^5.18.0",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.4.0",
+    "vitest": "^1.6.0",
+    "@testing-library/react": "^14.2.0",
+    "@testing-library/jest-dom": "^6.4.0",
+    "jsdom": "^24.0.0",
+    "@playwright/test": "^1.42.0",
+    "lighthouse": "^11.7.0",
+    "@vitejs/plugin-react": "^4.2.1"
+  }
+}
