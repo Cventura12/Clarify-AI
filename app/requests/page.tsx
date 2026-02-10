@@ -2,14 +2,17 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { authOptions } from "@/lib/auth";
 import { getServerSession } from "next-auth";
+import type { JsonValue } from "@prisma/client/runtime/library";
 
-const statusTone: Record<string, string> = {
-  interpreted: "bg-slate-100 text-slate-600",
-  planned: "bg-sky-100 text-sky-700",
-  in_progress: "bg-amber-100 text-amber-700",
-  completed: "bg-emerald-100 text-emerald-700",
-  blocked: "bg-rose-100 text-rose-700",
-  abandoned: "bg-slate-200 text-slate-500",
+const asArray = <T,>(value: JsonValue): T[] => (Array.isArray(value) ? (value as T[]) : []);
+
+const formatDeadline = (dates: JsonValue) => {
+  const items = asArray<{ date: string | null }>(dates);
+  const first = items.find((item) => item.date);
+  if (!first?.date) return "No deadline";
+  const parsed = new Date(first.date);
+  if (Number.isNaN(parsed.getTime())) return "No deadline";
+  return parsed.toLocaleDateString();
 };
 
 const urgencyTone: Record<string, string> = {
@@ -104,20 +107,15 @@ export default async function RequestsPage({
           </div>
         ) : (
           cards.map(({ request, task }) => (
-            <div key={task.id} className="rounded-2xl border border-[#e6e4e1] bg-white p-5 shadow-soft">
-              <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+            <div key={task.id} className="rounded-2xl border border-[#e6e4e1] bg-white p-4 shadow-soft">
+              <div className="flex items-center justify-between gap-2 text-xs">
                 <span className={`rounded-full px-2 py-1 font-semibold ${urgencyTone[task.urgency] ?? "bg-slate-100 text-slate-600"}`}>
                   {task.urgency}
                 </span>
-                <span className={`rounded-full px-2 py-1 font-semibold ${statusTone[task.taskStatus] ?? "bg-slate-100 text-slate-600"}`}>
-                  {task.taskStatus}
-                </span>
+                <span className="text-slate-400">{formatDeadline(task.dates)}</span>
               </div>
-              <h3 className="mt-3 text-base font-semibold text-slate-900">{task.title}</h3>
-              <p className="mt-1 text-sm text-slate-500">{task.summary}</p>
-              <p className="mt-3 text-xs text-slate-400">
-                {request.rawInput}
-              </p>
+              <h3 className="mt-2 text-sm font-semibold text-slate-900">{task.title}</h3>
+              <p className="mt-1 text-xs text-slate-500 line-clamp-2">{task.summary}</p>
               <div className="mt-4 flex justify-end text-xs text-slate-400">
                 <Link className="flex items-center gap-1" href={`/request/${request.id}`}>
                   View details

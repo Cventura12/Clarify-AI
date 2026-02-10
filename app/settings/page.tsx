@@ -1,6 +1,9 @@
 import Link from "next/link";
+import { prisma } from "@/lib/db";
+import { authOptions } from "@/lib/auth";
+import { getServerSession } from "next-auth";
 
-const sections = [
+const baseSections = [
   {
     title: "Account",
     items: [
@@ -28,7 +31,35 @@ const sections = [
   },
 ];
 
-export default function SettingsPage() {
+export default async function SettingsPage() {
+  const session = await getServerSession(authOptions);
+  const userId = session?.user?.id ?? null;
+
+  if (!userId) {
+    return (
+      <div className="rounded-2xl border border-[#e6e4e1] bg-white p-6 text-sm text-slate-500 shadow-soft">
+        Please sign in to view settings.
+      </div>
+    );
+  }
+
+  const workspaceCount =
+    (await prisma.draft.count({ where: { userId } })) +
+    (await prisma.document.count({ where: { userId } })) +
+    (await prisma.file.count({ where: { userId } })) +
+    (await prisma.deadline.count({ where: { userId } })) +
+    (await prisma.jobApplication.count({ where: { userId } }));
+
+  const intelligenceCount =
+    (await prisma.memoryEntry.count({ where: { userId } })) +
+    (await prisma.contextNode.count({ where: { userId } }));
+
+  const sections = [
+    baseSections[0],
+    ...(workspaceCount > 0 ? [baseSections[1]] : []),
+    ...(intelligenceCount > 0 ? [baseSections[2]] : []),
+  ];
+
   return (
     <div className="space-y-6">
       <header className="space-y-2">
@@ -38,6 +69,11 @@ export default function SettingsPage() {
       </header>
 
       <div className="space-y-6">
+        {workspaceCount === 0 && intelligenceCount === 0 ? (
+          <div className="rounded-2xl border border-[#e6e4e1] bg-white p-6 text-sm text-slate-500 shadow-soft">
+            Advanced sections will appear after you generate drafts, files, deadlines, or memory.
+          </div>
+        ) : null}
         {sections.map((section) => (
           <div key={section.title} className="rounded-2xl border border-[#e6e4e1] bg-white p-5 shadow-soft">
             <div className="flex items-center justify-between">

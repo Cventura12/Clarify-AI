@@ -200,35 +200,11 @@ export default function IntegrationCard({
         </button>
         <button
           type="button"
-          onClick={test}
-          disabled={isPending || status !== "connected"}
-          className="rounded-full border border-[#d8d4cf] bg-white px-4 py-2 font-semibold uppercase tracking-[0.2em] text-slate-600"
-        >
-          Test
-        </button>
-        <button
-          type="button"
-          onClick={refresh}
-          disabled={isPending || status !== "connected"}
-          className="rounded-full border border-[#d8d4cf] bg-white px-4 py-2 font-semibold uppercase tracking-[0.2em] text-slate-600"
-        >
-          Refresh token
-        </button>
-        <button
-          type="button"
           onClick={sync}
           disabled={isPending || status !== "connected"}
           className="rounded-full border border-[#d8d4cf] bg-white px-4 py-2 font-semibold uppercase tracking-[0.2em] text-slate-600"
         >
           Sync
-        </button>
-        <button
-          type="button"
-          onClick={preview}
-          disabled={isPending || status !== "connected"}
-          className="rounded-full border border-[#d8d4cf] bg-white px-4 py-2 font-semibold uppercase tracking-[0.2em] text-slate-600"
-        >
-          Preview
         </button>
         <button
           type="button"
@@ -238,11 +214,45 @@ export default function IntegrationCard({
         >
           Disconnect
         </button>
-        {lastSync ? <span className="text-xs text-slate-400">Last sync {lastSync}</span> : null}
-        <span className="text-xs text-slate-400">Token expires {expiresLabel}</span>
-        <span className="text-xs text-slate-400">Refreshed {refreshedLabel}</span>
-        {message ? <span className="text-xs text-slate-500">{message}</span> : null}
       </div>
+
+      <details className="mt-4 rounded-xl border border-[#ece9e5] bg-[#fbfaf8] p-3 text-xs text-slate-500">
+        <summary className="cursor-pointer font-semibold uppercase tracking-[0.2em] text-slate-500">
+          Advanced
+        </summary>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={test}
+            disabled={isPending || status !== "connected"}
+            className="rounded-full border border-[#d8d4cf] bg-white px-3 py-1 font-semibold uppercase tracking-[0.2em] text-slate-600"
+          >
+            Test
+          </button>
+          <button
+            type="button"
+            onClick={refresh}
+            disabled={isPending || status !== "connected"}
+            className="rounded-full border border-[#d8d4cf] bg-white px-3 py-1 font-semibold uppercase tracking-[0.2em] text-slate-600"
+          >
+            Refresh token
+          </button>
+          <button
+            type="button"
+            onClick={preview}
+            disabled={isPending || status !== "connected"}
+            className="rounded-full border border-[#d8d4cf] bg-white px-3 py-1 font-semibold uppercase tracking-[0.2em] text-slate-600"
+          >
+            Preview
+          </button>
+        </div>
+        <div className="mt-3 space-y-1 text-xs text-slate-400">
+          {lastSync ? <div>Last sync {lastSync}</div> : null}
+          <div>Token expires {expiresLabel}</div>
+          <div>Refreshed {refreshedLabel}</div>
+          {message ? <div>{message}</div> : null}
+        </div>
+      </details>
 
       {previewOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">

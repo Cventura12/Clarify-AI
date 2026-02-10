@@ -10,9 +10,11 @@ const asArray = <T,>(value: JsonValue): T[] => (Array.isArray(value) ? (value as
 export default function TaskCard({
   task,
   plan,
+  variant = "full",
 }: {
   task: Task;
   plan?: (Plan & { steps: Step[] }) | null;
+  variant?: "full" | "compact";
 }) {
   const ambiguities = asArray<{
     question: string;
@@ -23,6 +25,19 @@ export default function TaskCard({
   const hiddenDependencies = asArray<{ insight: string; risk_if_ignored: string }>(
     task.hiddenDependencies
   );
+
+  if (variant === "compact") {
+    return (
+      <div className="rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-soft">
+        <div className="flex items-center justify-between text-xs text-slate-400">
+          <StatusBadge label={task.urgency} tone={task.urgency} />
+          <span className="uppercase tracking-[0.2em]">{task.domain}</span>
+        </div>
+        <h3 className="mt-2 text-sm font-semibold text-slate-900">{task.title}</h3>
+        <p className="mt-1 text-xs text-slate-500 line-clamp-2">{task.summary}</p>
+      </div>
+    );
+  }
 
   return (
     <div

@@ -6,6 +6,9 @@ import { authOptions } from "@/lib/auth";
 import { addMemoryEntry } from "@/lib/memory";
 import { syncRequestHistoryNode } from "@/lib/context";
 import { getServerSession } from "next-auth";
+import { Prisma } from "@prisma/client";
+
+const toJson = (value: unknown) => value as Prisma.InputJsonValue;
 
 export async function POST(request: Request) {
   try {
@@ -29,9 +32,9 @@ export async function POST(request: Request) {
     const createdRequest = await prisma.request.create({
       data: {
         userId,
-        rawInput: interpretation.raw_input,
+        rawInput: input,
         requestCount: interpretation.request_count,
-        crossTaskDeps: interpretation.cross_task_dependencies,
+        crossTaskDeps: toJson(interpretation.cross_task_dependencies),
         tasks: {
           create: interpretation.tasks.map((task) => ({
             id: task.task_id,
@@ -40,11 +43,11 @@ export async function POST(request: Request) {
             domain: task.domain,
             urgency: task.urgency,
             complexity: task.complexity,
-            entities: task.entities,
-            dates: task.dates,
-            status: task.status,
-            ambiguities: task.ambiguities,
-            hiddenDependencies: task.hidden_dependencies,
+            entities: toJson(task.entities),
+            dates: toJson(task.dates),
+            status: toJson(task.status),
+            ambiguities: toJson(task.ambiguities),
+            hiddenDependencies: toJson(task.hidden_dependencies),
             taskStatus: "interpreted",
             confidenceScore: confidence.taskScores.get(task.task_id) ?? 0.5,
           })),

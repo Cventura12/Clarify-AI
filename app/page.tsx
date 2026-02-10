@@ -73,15 +73,21 @@ const StatusGlyph = ({ kind }: { kind: "clock" | "check" | "alert" }) => {
 };
 
 const buildCard = (task: Task, requestId: string): CardItem => {
-  const statusText = typeof task.status === "object" && task.status
-    ? (task.status as { what_is_pending?: string }).what_is_pending ?? task.summary
-    : task.summary;
+  const pending =
+    typeof task.status === "object" && task.status
+      ? (task.status as { what_is_pending?: string }).what_is_pending
+      : undefined;
+  const statusText = pending ?? task.summary ?? "Awaiting next step";
+  const title =
+    task.title && task.title.toLowerCase() !== "clarify request details"
+      ? task.title
+      : task.summary ?? task.title;
   const statusKind = task.taskStatus === "blocked" ? "alert" : task.taskStatus === "planned" ? "check" : "clock";
 
   return {
     id: task.id,
-    title: task.title,
-    urgency: task.urgency,
+    title: title ?? "Untitled request",
+    urgency: task.urgency ?? "low",
     meta: formatDeadline(task.dates),
     statusText: statusText ?? task.summary,
     statusKind,
