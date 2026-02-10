@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import gsap from "gsap";
+import ThemeToggle from "./ThemeToggle";
 
 const navItems = [
   { label: "Dashboard", href: "/", icon: "grid" },
@@ -188,15 +189,15 @@ export default function Sidebar() {
 
   return (
     <>
-      <div className="sticky top-0 z-40 flex items-center justify-between border-b border-[#ebe7e1] bg-[#f7f6f2] px-4 py-3 lg:hidden">
+      <div className="sticky top-0 z-40 flex items-center justify-between border-b border-[var(--border)] bg-[var(--app-main-bg)] px-4 py-3 lg:hidden">
         <button
           type="button"
           onClick={() => setIsOpen(true)}
-          className="rounded-full border border-[#d8d4cf] bg-white px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.3em] text-slate-600"
+          className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.3em] text-[var(--muted)]"
         >
           Menu
         </button>
-        <div className="flex items-center gap-2 text-sm font-semibold tracking-wide text-slate-700">
+        <div className="flex items-center gap-2 text-sm font-semibold tracking-wide text-[var(--text)]">
           <span className="h-2 w-2 rounded-full bg-emerald-500" />
           Clarify AI
         </div>
@@ -261,6 +262,10 @@ export default function Sidebar() {
             </Link>
           ))}
         </nav>
+
+        <div className="px-4 pb-6">
+          <ThemeToggle />
+        </div>
 
         <div className="mt-auto border-t border-white/10 p-4" />
       </aside>

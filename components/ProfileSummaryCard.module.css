@@ -1,9 +1,9 @@
 .card {
   border-radius: 28px;
-  border: 1px solid rgba(226, 232, 240, 0.9);
-  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, var(--surface) 0%, var(--surface-alt) 100%);
   padding: 24px;
-  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+  box-shadow: var(--shadow);
 }
 
 .header {
@@ -17,20 +17,20 @@
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.35em;
-  color: #98a2b3;
+  color: var(--kicker);
   margin: 0;
 }
 
 .title {
   font-size: 16px;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--text);
   margin: 0;
 }
 
 .percent {
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--kicker);
 }
 
 .progressWrap {
@@ -40,7 +40,7 @@
 .progressTrack {
   height: 8px;
   border-radius: 999px;
-  background: #f1f5f9;
+  background: var(--surface-alt);
 }
 
 .progressFill {
@@ -52,7 +52,7 @@
 .detail {
   margin-top: 16px;
   font-size: 14px;
-  color: #475569;
+  color: var(--muted);
 }
 
 .detail p {
@@ -68,14 +68,14 @@
 
 .button {
   border-radius: 999px;
-  border: 1px solid #c7d2fe;
-  background: #eef2ff;
+  border: 1px solid var(--chip-border);
+  background: var(--chip-bg);
   padding: 8px 16px;
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.2em;
-  color: #4338ca;
+  color: var(--chip-text);
 }
 
 .button:hover {

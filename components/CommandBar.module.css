@@ -1,9 +1,9 @@
 .command {
   border-radius: 28px;
-  border: 1px solid rgba(199, 210, 254, 0.8);
-  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid var(--chip-border);
+  background: linear-gradient(180deg, var(--surface) 0%, var(--surface-alt) 100%);
   padding: 24px;
-  box-shadow: 0 20px 48px rgba(15, 23, 42, 0.08);
+  box-shadow: var(--shadow-strong);
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -18,7 +18,7 @@
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.35em;
-  color: #98a2b3;
+  color: var(--kicker);
 }
 
 .commandStatus {
@@ -45,12 +45,12 @@
   border: none;
   background: transparent;
   font-size: 16px;
-  color: #0f172a;
+  color: var(--text);
   outline: none;
 }
 
 .commandInput::placeholder {
-  color: #94a3b8;
+  color: var(--kicker);
 }
 
 .commandFooter {
@@ -60,7 +60,7 @@
   justify-content: space-between;
   gap: 16px;
   font-size: 14px;
-  color: #667085;
+  color: var(--muted);
 }
 
 .commandHint {
@@ -68,7 +68,7 @@
   align-items: center;
   gap: 12px;
   font-size: 12px;
-  color: #667085;
+  color: var(--muted);
 }
 
 .commandHintIcon {
@@ -78,8 +78,8 @@
   height: 28px;
   width: 28px;
   border-radius: 999px;
-  background: #eef2ff;
-  color: #4338ca;
+  background: var(--chip-bg);
+  color: var(--chip-text);
 }
 
 .commandHintSvg {

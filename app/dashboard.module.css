@@ -1,12 +1,12 @@
 .dashboard {
-  --dash-surface: #ffffff;
-  --dash-border: rgba(203, 213, 225, 0.7);
-  --dash-shadow: 0 18px 44px rgba(15, 23, 42, 0.08);
-  --dash-text: #0f172a;
-  --dash-muted: #667085;
-  --dash-kicker: #98a2b3;
+  --dash-surface: var(--surface);
+  --dash-border: var(--border-strong);
+  --dash-shadow: var(--shadow-strong);
+  --dash-text: var(--text);
+  --dash-muted: var(--muted);
+  --dash-kicker: var(--kicker);
   --dash-accent: #6366f1;
-  --dash-accent-soft: #eef2ff;
+  --dash-accent-soft: var(--chip-bg);
   --dash-accent-warm: #f59e0b;
   --dash-accent-teal: #14b8a6;
   display: flex;
@@ -109,14 +109,14 @@
 
 .pill {
   border-radius: 999px;
-  border: 1px solid rgba(199, 210, 254, 0.9);
+  border: 1px solid var(--chip-border);
   background: var(--dash-accent-soft);
   padding: 6px 14px;
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.2em;
-  color: #4338ca;
+  color: var(--chip-text);
 }
 
 .heroSide {
@@ -183,7 +183,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.3em;
-  color: #475569;
+  color: var(--dash-muted);
 }
 
 .cardsGrid {
@@ -194,7 +194,7 @@
 .taskCard {
   border-radius: 24px;
   border: 1px solid var(--dash-border);
-  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  background: linear-gradient(180deg, var(--surface) 0%, var(--surface-alt) 100%);
   padding: 20px;
   box-shadow: var(--dash-shadow);
 }
@@ -282,7 +282,7 @@
   justify-content: flex-end;
   margin-top: 16px;
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--dash-kicker);
 }
 
 .cardLink {

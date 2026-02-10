@@ -23,10 +23,10 @@ export const metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={`${body.variable} ${display.variable}`}>
-      <body className="min-h-screen bg-[#f2f1ed] font-body text-[#141517] antialiased">
+      <body className="min-h-screen bg-[var(--app-bg)] font-body text-[var(--text)] antialiased">
         <div className="flex min-h-screen flex-col lg:flex-row">
           <Sidebar />
-          <main className="relative flex-1 overflow-hidden bg-[#f7f6f2]">
+          <main className="relative flex-1 overflow-hidden bg-[var(--app-main-bg)]">
             <div className="pointer-events-none absolute inset-0">
               <div className="absolute -top-28 right-[-6rem] h-72 w-72 rounded-full bg-[#c9d7ff]/40 blur-3xl" />
               <div className="absolute bottom-[-10rem] left-[-8rem] h-80 w-80 rounded-full bg-[#f8dcc6]/40 blur-3xl" />
