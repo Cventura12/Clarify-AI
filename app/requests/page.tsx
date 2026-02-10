@@ -40,8 +40,17 @@ export default async function RequestsPage({
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id ?? null;
   const view = searchParams.view ?? "all";
+
+  if (!userId) {
+    return (
+      <div className="rounded-2xl border border-[#e6e4e1] bg-white p-6 text-sm text-slate-500 shadow-soft">
+        Please sign in to view requests.
+      </div>
+    );
+  }
+
   const requests = await prisma.request.findMany({
-    where: userId ? { userId } : undefined,
+    where: { userId },
     include: {
       tasks: true,
     },

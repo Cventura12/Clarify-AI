@@ -1,7 +1,15 @@
 import { prisma } from "@/lib/db";
+import { authOptions } from "@/lib/auth";
+import { getServerSession } from "next-auth";
 
 export async function GET(request: Request) {
   try {
+    const session = await getServerSession(authOptions);
+    const userId = session?.user?.id;
+    if (!userId) {
+      return Response.json({ error: { message: "Unauthorized" } }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const query = searchParams.get("q")?.trim() ?? "";
     const type = searchParams.get("type")?.trim() ?? "";
@@ -16,6 +24,15 @@ export async function GET(request: Request) {
             ],
           }
         : {}),
+      step: {
+        plan: {
+          task: {
+            request: {
+              userId,
+            },
+          },
+        },
+      },
     };
 
     const files = await prisma.fileArtifact.findMany({

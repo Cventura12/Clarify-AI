@@ -146,6 +146,7 @@ model UserPreference {
 
 model ContextNode {
   id        String        @id @default(cuid())
+  userId    String?
   label     String
   type      String
   metadata  Json?
@@ -153,16 +154,19 @@ model ContextNode {
   updatedAt DateTime      @updatedAt
   fromEdges ContextEdge[] @relation("FromNode")
   toEdges   ContextEdge[] @relation("ToNode")
+  user      User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model ContextEdge {
   id        String      @id @default(cuid())
+  userId    String?
   fromId    String
   toId      String
   relation  String
   createdAt DateTime    @default(now())
   from      ContextNode @relation("FromNode", fields: [fromId], references: [id], onDelete: Cascade)
   to        ContextNode @relation("ToNode", fields: [toId], references: [id], onDelete: Cascade)
+  user      User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model MemoryEntry {
@@ -219,6 +223,8 @@ model User {
   profile         UserProfile?
   preferences     UserPreference[]
   memoryEntries   MemoryEntry[]
+  contextNodes    ContextNode[]
+  contextEdges    ContextEdge[]
   integrations    Integration[]
   jobApplications JobApplication[]
 }

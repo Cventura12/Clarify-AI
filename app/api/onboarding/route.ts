@@ -61,8 +61,8 @@ export async function POST(request: Request) {
       }));
 
     const savedPrefs = normalized.length ? await upsertPreferences(userId, normalized) : [];
-    const userNode = await syncProfileToContext(profile);
-    await syncPreferencesToContext(userNode, savedPrefs);
+    const userNode = await syncProfileToContext(userId, profile);
+    await syncPreferencesToContext(userId, userNode, savedPrefs);
 
     await addMemoryEntry({
       type: "onboarding",

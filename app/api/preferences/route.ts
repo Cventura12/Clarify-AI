@@ -54,8 +54,8 @@ export async function PUT(request: Request) {
 
     const preferences = await upsertPreferences(userId, normalized);
     const profile = await getProfile(userId);
-    const userNode = await syncProfileToContext(profile);
-    await syncPreferencesToContext(userNode, preferences);
+    const userNode = await syncProfileToContext(userId, profile);
+    await syncPreferencesToContext(userId, userNode, preferences);
 
     return Response.json({ preferences });
   } catch (error) {

@@ -17,8 +17,16 @@ export default async function RequestDetailPage({
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id ?? null;
 
+  if (!userId) {
+    return (
+      <div className="rounded-2xl border border-[#e6e4e1] bg-white p-6 text-sm text-slate-500 shadow-soft">
+        Please sign in to view this request.
+      </div>
+    );
+  }
+
   const request = await prisma.request.findUnique({
-    where: { id: params.id, userId: userId ?? undefined },
+    where: { id: params.id, userId },
     include: {
       tasks: {
         include: {
@@ -40,6 +48,7 @@ export default async function RequestDetailPage({
         plan: {
           task: {
             requestId: params.id,
+            request: { userId },
           },
         },
       },
@@ -52,6 +61,7 @@ export default async function RequestDetailPage({
       plan: {
         task: {
           requestId: params.id,
+          request: { userId },
         },
       },
     },

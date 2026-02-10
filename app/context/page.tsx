@@ -1,8 +1,27 @@
 import { prisma } from "@/lib/db";
+import { authOptions } from "@/lib/auth";
+import { getServerSession } from "next-auth";
 
 export default async function ContextPage() {
-  const nodes = await prisma.contextNode.findMany({ orderBy: { createdAt: "desc" } });
-  const edges = await prisma.contextEdge.findMany({ orderBy: { createdAt: "desc" } });
+  const session = await getServerSession(authOptions);
+  const userId = session?.user?.id;
+
+  if (!userId) {
+    return (
+      <div className="rounded-2xl border border-[#e6e4e1] bg-white p-6 text-sm text-slate-500 shadow-soft">
+        Please sign in to view context.
+      </div>
+    );
+  }
+
+  const nodes = await prisma.contextNode.findMany({
+    where: { userId },
+    orderBy: { createdAt: "desc" },
+  });
+  const edges = await prisma.contextEdge.findMany({
+    where: { userId },
+    orderBy: { createdAt: "desc" },
+  });
   const nodeMap = new Map(nodes.map((node) => [node.id, node]));
 
   return (
@@ -49,12 +68,12 @@ export default async function ContextPage() {
                 const from = nodeMap.get(edge.fromId);
                 const to = nodeMap.get(edge.toId);
                 return (
-                <div key={edge.id} className="rounded-lg border border-[#ebe8e3] bg-[#fbfaf8] p-3 text-xs">
-                  <p className="text-slate-500">
-                    {(from?.label ?? edge.fromId)} → {(to?.label ?? edge.toId)}
-                  </p>
-                  <p className="text-slate-400">{edge.relation}</p>
-                </div>
+                  <div key={edge.id} className="rounded-lg border border-[#ebe8e3] bg-[#fbfaf8] p-3 text-xs">
+                    <p className="text-slate-500">
+                      {(from?.label ?? edge.fromId)} {"->"} {(to?.label ?? edge.toId)}
+                    </p>
+                    <p className="text-slate-400">{edge.relation}</p>
+                  </div>
                 );
               })
             )}

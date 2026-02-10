@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import type { ContextNode, UserPreference, UserProfile } from "@prisma/client";
 
 type CreateNodeInput = {
+  userId: string;
   label: string;
   type: string;
   metadata?: Record<string, unknown>;
@@ -9,9 +10,10 @@ type CreateNodeInput = {
 
 const normalize = (value: string) => value.trim().toLowerCase();
 
-export const getOrCreateNode = async ({ label, type, metadata }: CreateNodeInput) => {
+export const getOrCreateNode = async ({ userId, label, type, metadata }: CreateNodeInput) => {
   const existing = await prisma.contextNode.findFirst({
     where: {
+      userId,
       label: { equals: label },
       type: { equals: type },
     },
@@ -26,6 +28,7 @@ export const getOrCreateNode = async ({ label, type, metadata }: CreateNodeInput
 
   return prisma.contextNode.create({
     data: {
+      userId,
       label,
       type,
       metadata,
@@ -33,9 +36,10 @@ export const getOrCreateNode = async ({ label, type, metadata }: CreateNodeInput
   });
 };
 
-const linkNodes = async (from: ContextNode, to: ContextNode, relation: string) => {
+const linkNodes = async (userId: string, from: ContextNode, to: ContextNode, relation: string) => {
   const existing = await prisma.contextEdge.findFirst({
     where: {
+      userId,
       fromId: from.id,
       toId: to.id,
       relation,
@@ -48,6 +52,7 @@ const linkNodes = async (from: ContextNode, to: ContextNode, relation: string) =
 
   return prisma.contextEdge.create({
     data: {
+      userId,
       fromId: from.id,
       toId: to.id,
       relation,
@@ -55,16 +60,16 @@ const linkNodes = async (from: ContextNode, to: ContextNode, relation: string) =
   });
 };
 
-export const syncProfileToContext = async (profile: UserProfile | null) => {
+export const syncProfileToContext = async (userId: string, profile: UserProfile | null) => {
   if (!profile) return null;
 
   const userLabel = profile.fullName?.trim() || "User";
-  const userNode = await getOrCreateNode({ label: userLabel, type: "person" });
+  const userNode = await getOrCreateNode({ userId, label: userLabel, type: "person" });
 
   const attach = async (label?: string | null, type?: string, relation?: string, metadata?: Record<string, unknown>) => {
     if (!label || !type || !relation) return;
-    const node = await getOrCreateNode({ label, type, metadata });
-    await linkNodes(userNode, node, relation);
+    const node = await getOrCreateNode({ userId, label, type, metadata });
+    await linkNodes(userId, userNode, node, relation);
   };
 
   await attach(profile.email, "email", "uses");
@@ -80,6 +85,7 @@ export const syncProfileToContext = async (profile: UserProfile | null) => {
 };
 
 export const syncPreferencesToContext = async (
+  userId: string,
   userNode: ContextNode | null,
   preferences: UserPreference[]
 ) => {
@@ -87,17 +93,19 @@ export const syncPreferencesToContext = async (
 
   for (const pref of preferences) {
     const node = await getOrCreateNode({
+      userId,
       label: pref.key,
       type: "preference",
       metadata: { value: pref.value },
     });
-    await linkNodes(userNode, node, "prefers");
+    await linkNodes(userId, userNode, node, "prefers");
   }
 };
 
-export const syncRequestHistoryNode = async (summary: string) => {
+export const syncRequestHistoryNode = async (userId: string, summary: string) => {
   if (!summary.trim()) return null;
   return getOrCreateNode({
+    userId,
     label: summary,
     type: "request",
     metadata: { summary },

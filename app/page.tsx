@@ -137,22 +137,33 @@ export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id ?? null;
 
+  if (!userId) {
+    return (
+      <div className="rounded-2xl border border-[#e6e4e1] bg-white p-6 text-sm text-slate-500 shadow-soft">
+        Please sign in to view your dashboard.
+      </div>
+    );
+  }
+
   const requests = await prisma.request.findMany({
-    where: userId ? { userId } : undefined,
+    where: { userId },
     include: {
       tasks: true,
     },
     orderBy: { createdAt: "desc" },
   });
   const profile = await prisma.userProfile.findFirst({
-    where: userId ? { userId } : undefined,
+    where: { userId },
   });
   const preferences = await prisma.userPreference.findMany({
-    where: userId ? { userId } : undefined,
+    where: { userId },
   });
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
   const planRuns = await prisma.planRun.findMany({
-    where: { createdAt: { gte: sevenDaysAgo } },
+    where: {
+      createdAt: { gte: sevenDaysAgo },
+      plan: { task: { request: { userId } } },
+    },
     orderBy: { createdAt: "desc" },
     take: 50,
   });
@@ -171,6 +182,15 @@ export default async function DashboardPage() {
   const scheduledLogs = await prisma.executionLog.findMany({
     where: {
       action: "Follow-up scheduled",
+      step: {
+        plan: {
+          task: {
+            request: {
+              userId,
+            },
+          },
+        },
+      },
     },
     orderBy: { createdAt: "desc" },
     take: 10,

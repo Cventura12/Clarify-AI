@@ -55,7 +55,7 @@ export async function PUT(request: Request) {
     }
 
     const profile = await upsertProfile(userId, parsed.data);
-    await syncProfileToContext(profile);
+    await syncProfileToContext(userId, profile);
     return Response.json({ profile });
   } catch (error) {
     console.error("Profile PUT error", error);

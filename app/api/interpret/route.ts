@@ -63,7 +63,9 @@ export async function POST(request: Request) {
       userId,
     });
 
-    await syncRequestHistoryNode(interpretation.raw_input);
+    if (userId) {
+      await syncRequestHistoryNode(userId, interpretation.raw_input);
+    }
 
     return Response.json({
       requestId: createdRequest.id,

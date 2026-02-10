@@ -1,8 +1,22 @@
 import MemoryComposer from "@/components/MemoryComposer";
 import { prisma } from "@/lib/db";
+import { authOptions } from "@/lib/auth";
+import { getServerSession } from "next-auth";
 
 export default async function MemoryPage() {
+  const session = await getServerSession(authOptions);
+  const userId = session?.user?.id;
+
+  if (!userId) {
+    return (
+      <div className="rounded-2xl border border-[#e6e4e1] bg-white p-6 text-sm text-slate-500 shadow-soft">
+        Please sign in to view memory.
+      </div>
+    );
+  }
+
   const entries = await prisma.memoryEntry.findMany({
+    where: { userId },
     orderBy: { createdAt: "desc" },
     take: 50,
   });

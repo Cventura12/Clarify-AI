@@ -8,8 +8,16 @@ export default async function IntegrationsPage() {
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id ?? null;
 
+  if (!userId) {
+    return (
+      <div className="rounded-2xl border border-[#e6e4e1] bg-white p-6 text-sm text-slate-500 shadow-soft">
+        Please sign in to view integrations.
+      </div>
+    );
+  }
+
   const integrations = await prisma.integration.findMany({
-    where: userId ? { userId } : undefined,
+    where: { userId },
     include: {
       syncs: { orderBy: { createdAt: "desc" }, take: 1 },
     },

@@ -1,5 +1,7 @@
 import { z } from "zod";
 import { prisma } from "@/lib/db";
+import { authOptions } from "@/lib/auth";
+import { getServerSession } from "next-auth";
 
 const MemorySchema = z.object({
   type: z.string(),
@@ -9,7 +11,14 @@ const MemorySchema = z.object({
 
 export async function GET() {
   try {
+    const session = await getServerSession(authOptions);
+    const userId = session?.user?.id;
+    if (!userId) {
+      return Response.json({ error: { message: "Unauthorized" } }, { status: 401 });
+    }
+
     const entries = await prisma.memoryEntry.findMany({
+      where: { userId },
       orderBy: { createdAt: "desc" },
       take: 50,
     });
@@ -22,6 +31,12 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const session = await getServerSession(authOptions);
+    const userId = session?.user?.id;
+    if (!userId) {
+      return Response.json({ error: { message: "Unauthorized" } }, { status: 401 });
+    }
+
     const body = await request.json().catch(() => null);
     const parsed = MemorySchema.safeParse(body);
     if (!parsed.success) {
@@ -33,6 +48,7 @@ export async function POST(request: Request) {
 
     const entry = await prisma.memoryEntry.create({
       data: {
+        userId,
         type: parsed.data.type,
         content: parsed.data.content,
         source: parsed.data.source ?? "user",
