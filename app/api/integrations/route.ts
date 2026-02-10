@@ -2,6 +2,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { authOptions } from "@/lib/auth";
 import { getServerSession } from "next-auth";
+import type { JsonValue } from "@prisma/client/runtime/library";
 
 const IntegrationSchema = z.object({
   provider: z.string(),
@@ -56,12 +57,15 @@ export async function POST(request: Request) {
     });
 
     const mergeMetadata = (
-      base: Record<string, unknown> | null,
-      incoming: Record<string, unknown> | null
-    ) => ({
+      base: Record<string, JsonValue> | null,
+      incoming: Record<string, JsonValue> | null
+    ): Record<string, JsonValue> => ({
       ...(base ?? {}),
       ...(incoming ?? {}),
     });
+
+    const toJsonObject = (value: Record<string, unknown> | null | undefined) =>
+      (value ?? {}) as Record<string, JsonValue>;
 
     const integration = existing
       ? await prisma.integration.update({
@@ -69,10 +73,10 @@ export async function POST(request: Request) {
           data: {
             status: parsed.data.status ?? existing.status,
             metadata: parsed.data.replaceMetadata
-              ? parsed.data.metadata
+              ? toJsonObject(parsed.data.metadata ?? {})
               : mergeMetadata(
-                  existing.metadata as Record<string, unknown> | null,
-                  parsed.data.metadata ?? null
+                  (existing.metadata as Record<string, JsonValue> | null) ?? null,
+                  (parsed.data.metadata as Record<string, JsonValue> | null) ?? null
                 ),
           },
         })
@@ -80,7 +84,7 @@ export async function POST(request: Request) {
           data: {
             provider: parsed.data.provider,
             status: parsed.data.status ?? "connected",
-            metadata: parsed.data.metadata ?? {},
+            metadata: toJsonObject(parsed.data.metadata ?? {}),
             userId,
           },
         });
