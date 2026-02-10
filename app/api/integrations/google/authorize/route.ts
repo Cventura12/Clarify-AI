@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { getGoogleAuthUrl } from "@/lib/integrations/google";
 import { authOptions } from "@/lib/auth";
 import { getServerSession } from "next-auth";
+import type { JsonValue } from "@prisma/client/runtime/library";
 
 export async function GET() {
   try {
@@ -17,13 +18,13 @@ export async function GET() {
       where: { provider_userId: { provider: "google", userId } },
     });
 
-    const mergedMetadata = {
-      ...(existing?.metadata as Record<string, unknown> | null),
+    const baseMetadata = (existing?.metadata as Record<string, JsonValue> | null) ?? {};
+    const calendarId =
+      typeof baseMetadata.calendarId === "string" ? baseMetadata.calendarId : "primary";
+    const mergedMetadata: Record<string, JsonValue> = {
+      ...baseMetadata,
       oauthState: state,
-      calendarId:
-        typeof (existing?.metadata as Record<string, unknown> | null)?.calendarId === "string"
-          ? (existing?.metadata as Record<string, unknown>).calendarId
-          : "primary",
+      calendarId,
     };
 
     await prisma.integration.upsert({
