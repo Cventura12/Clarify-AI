@@ -3,7 +3,7 @@
 ## Foundation (Weeks 1-3)
 - Scaffold Next.js 14 app with App Router and Tailwind
 - Create Prisma schema for users, tasks, obligations, pipelines, steps
-- Wire Supabase auth and session handling
+- Wire Google OAuth (NextAuth) and session handling
 - Build base layout with navigation and command bar
 - Implement interpret module and clarification prompts
 - Create task planner with dependency graph and priority scoring

@@ -1,19 +1,28 @@
 import { prisma } from "@/lib/db";
 import type { JsonValue } from "@prisma/client/runtime/library";
 import { executeAuthorizedStep } from "@/lib/plan/executor";
+import { authOptions } from "@/lib/auth";
+import { getServerSession } from "next-auth";
 
 const asArray = <T,>(value: JsonValue): T[] => (Array.isArray(value) ? (value as T[]) : []);
 
 export async function POST(_: Request, { params }: { params: { id: string } }) {
   try {
+    const session = await getServerSession(authOptions);
+    const userId = session?.user?.id;
+    if (!userId) {
+      return Response.json({ error: { message: "Unauthorized" } }, { status: 401 });
+    }
+
     const plan = await prisma.plan.findUnique({
       where: { id: params.id },
       include: {
         steps: { orderBy: { stepNumber: "asc" } },
+        task: { include: { request: true } },
       },
     });
 
-    if (!plan) {
+    if (!plan || plan.task.request.userId !== userId) {
       return Response.json({ error: { message: "Plan not found" } }, { status: 404 });
     }
 

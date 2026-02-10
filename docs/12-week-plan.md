@@ -15,13 +15,21 @@ Think of it as a chief of staff for life admin: follow-up emails, scholarship de
 - Intelligence (Weeks 7-9): Context memory, external integrations, and AI upgrades.
 - Polish and Demo (Weeks 10-12): UI refinement, testing, performance, and demo materials.
 
+## Current Gap To Full Goal
+What's still missing to fully meet the goal:
+- Real auth (Google / user accounts) - not fully wired.
+- Real Gmail integration for your actual inbox.
+- Robust execution across real systems (Calendar, email, job apps, portals).
+
+So it meets the foundation and core workflow, but not the "real-world personal execution layer" yet. We can get there by implementing Google OAuth + Gmail/Calendar integrations next.
+
 ## Tech Stack
 - Frontend: Next.js 14 (App Router), React, Tailwind CSS
 - Backend: Next.js API Routes, Prisma ORM, PostgreSQL
 - AI: OpenAI API (interpret, plan, execute prompts), prompt chaining
-- Auth: Supabase Auth
-- Infra: Vercel, Supabase, Cloudflare R2 (file storage)
-- Integrations: Google Calendar, Resend (email), webhooks
+- Auth: Google OAuth (NextAuth)
+- Infra: Vercel, Neon, Cloudflare R2 (file storage)
+- Integrations: Google Calendar + Gmail, webhooks
 
 ## Weekly Breakdown
 
@@ -29,13 +37,13 @@ Think of it as a chief of staff for life admin: follow-up emails, scholarship de
 Goals
 - Initialize Next.js 14 project with App Router
 - Set up PostgreSQL + Prisma schema (users, tasks, obligations, pipelines)
-- No auth in Week 1 (Supabase Auth begins Week 6)
+- No auth in Week 1 (Google OAuth begins Week 6)
 - Build base layout: sidebar, main content, command bar shell
 
 Deliverables
 - Deployed repo on Vercel with CI/CD
 - Database schema migrated and seeded
-- Auth deferred to Week 6 (Supabase Auth)
+- Auth deferred to Week 6 (Google OAuth)
 - Base UI layout responsive on desktop
 
 ### Week 2 | Input Layer - Interpret Pipeline | Foundation

@@ -1,10 +1,14 @@
 import OnboardingForm from "@/components/OnboardingForm";
 import { getProfile } from "@/lib/profile";
 import { getPreferences } from "@/lib/preferences";
+import { authOptions } from "@/lib/auth";
+import { getServerSession } from "next-auth";
 
 export default async function OnboardingPage() {
-  const profile = await getProfile();
-  const preferences = await getPreferences();
+  const session = await getServerSession(authOptions);
+  const userId = session?.user?.id ?? null;
+  const profile = await getProfile(userId);
+  const preferences = await getPreferences(userId);
 
   return (
     <div className="space-y-6">

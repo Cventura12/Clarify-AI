@@ -5,5 +5,5 @@ Focus: email drafting and communication actions.
 - [x] Add email template library
 - [x] Add follow-up scheduling helper
 - [x] Add notifications after execution
-- [ ] Integrate email sending provider (Resend or SendGrid)
+- [ ] Integrate Gmail sending via Google OAuth
 - [ ] Persist communication history in database (requires DATABASE_URL)

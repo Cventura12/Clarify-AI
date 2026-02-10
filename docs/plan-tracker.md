@@ -13,7 +13,7 @@ How to use this file
 Goals
 - [x] Initialize Next.js 14 project with App Router
 - [x] Set up PostgreSQL + Prisma schema (request/task/plan/step/execution log)
-- [x] No auth in Week 1 (Supabase Auth starts Week 6)
+- [x] No auth in Week 1 (Google OAuth starts Week 6)
 - [x] Build base layout: sidebar, main content, command bar shell
 
 Deliverables
@@ -89,7 +89,7 @@ Deliverables
 - [x] Notifications for due actions
 
 Notes
-- Drafting + sending routes are implemented; requires RESEND_API_KEY and RESEND_FROM to send real emails.
+- Drafting + sending routes are implemented; requires Google OAuth to send Gmail.
 
 ## Week 6 - Document and Form Automation
 Goals

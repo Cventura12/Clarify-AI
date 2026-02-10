@@ -1,0 +1,325 @@
+.dashboard {
+  --dash-surface: #ffffff;
+  --dash-border: rgba(203, 213, 225, 0.7);
+  --dash-shadow: 0 18px 44px rgba(15, 23, 42, 0.08);
+  --dash-text: #0f172a;
+  --dash-muted: #667085;
+  --dash-kicker: #98a2b3;
+  --dash-accent: #6366f1;
+  --dash-accent-soft: #eef2ff;
+  --dash-accent-warm: #f59e0b;
+  --dash-accent-teal: #14b8a6;
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+  position: relative;
+}
+
+.dashboard::before {
+  content: "";
+  position: absolute;
+  inset: -10% -5% auto;
+  height: 420px;
+  background: radial-gradient(circle at top left, rgba(99, 102, 241, 0.12), transparent 60%),
+    radial-gradient(circle at 20% 30%, rgba(20, 184, 166, 0.1), transparent 55%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.dashboard > * {
+  position: relative;
+  z-index: 1;
+}
+
+.orb {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(0px);
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.orbOne {
+  width: 220px;
+  height: 220px;
+  top: 120px;
+  right: 8%;
+  background: radial-gradient(circle at 30% 30%, rgba(99, 102, 241, 0.25), transparent 65%);
+}
+
+.orbTwo {
+  width: 260px;
+  height: 260px;
+  bottom: 120px;
+  left: 12%;
+  background: radial-gradient(circle at 30% 30%, rgba(20, 184, 166, 0.2), transparent 65%);
+}
+
+.heroGrid {
+  display: grid;
+  gap: 2rem;
+}
+
+.heroStack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.heroHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.heroLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.gradientLine {
+  height: 2px;
+  width: 32px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--dash-accent), #22d3ee, var(--dash-accent-teal));
+}
+
+.heroKicker {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.35em;
+  color: var(--dash-kicker);
+  margin: 0;
+}
+
+.heroTitle {
+  font-family: var(--font-display);
+  font-size: clamp(2.3rem, 3vw, 2.9rem);
+  color: var(--dash-text);
+  margin: 0;
+}
+
+.pillRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.pill {
+  border-radius: 999px;
+  border: 1px solid rgba(199, 210, 254, 0.9);
+  background: var(--dash-accent-soft);
+  padding: 6px 14px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: #4338ca;
+}
+
+.heroSide {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.secondaryGrid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.threadSection {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.sectionHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.sectionTitle {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.sectionLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.gradientLineWarm {
+  height: 2px;
+  width: 32px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #fb7185, var(--dash-accent-warm), #34d399);
+}
+
+.sectionKicker {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.35em;
+  color: var(--dash-kicker);
+  margin: 0;
+}
+
+.sectionHeadline {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--dash-text);
+  margin: 0;
+}
+
+.sectionLink {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+  color: #475569;
+}
+
+.cardsGrid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.taskCard {
+  border-radius: 24px;
+  border: 1px solid var(--dash-border);
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  padding: 20px;
+  box-shadow: var(--dash-shadow);
+}
+
+.cardMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+}
+
+.cardMetaText {
+  color: var(--dash-kicker);
+}
+
+.urgencyBadge {
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.urgencyCritical {
+  background: #ffe4e6;
+  color: #be123c;
+}
+
+.urgencyHigh {
+  background: #ffe4e6;
+  color: #be123c;
+}
+
+.urgencyMedium {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.urgencyLow {
+  background: #ecfdf3;
+  color: #059669;
+}
+
+.cardTitle {
+  margin: 12px 0 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--dash-text);
+}
+
+.cardStatus {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 12px;
+  font-size: 0.9rem;
+  color: var(--dash-muted);
+}
+
+.statusIcon {
+  height: 28px;
+  width: 28px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.statusAlert {
+  background: #ffe4e6;
+  color: #e11d48;
+}
+
+.statusCheck {
+  background: #dcfce7;
+  color: #059669;
+}
+
+.statusClock {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.cardFooter {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.cardLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: inherit;
+}
+
+.cardLinkIcon {
+  height: 14px;
+  width: 14px;
+}
+
+.icon {
+  height: 16px;
+  width: 16px;
+}
+
+@media (min-width: 1024px) {
+  .heroGrid {
+    grid-template-columns: 1.15fr 0.85fr;
+  }
+
+  .secondaryGrid {
+    grid-template-columns: 1.1fr 0.9fr;
+  }
+}
+
+@media (min-width: 768px) {
+  .cardsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1280px) {
+  .cardsGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

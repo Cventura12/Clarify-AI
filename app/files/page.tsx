@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
+import { authOptions } from "@/lib/auth";
+import { getServerSession } from "next-auth";
 
 type SearchParams = { q?: string; type?: string };
 
@@ -11,6 +13,16 @@ const snippet = (value?: string | null) => {
 export default async function FilesPage({ searchParams }: { searchParams: SearchParams }) {
   const query = searchParams.q?.trim() ?? "";
   const type = searchParams.type?.trim() ?? "";
+  const session = await getServerSession(authOptions);
+  const userId = session?.user?.id;
+
+  if (!userId) {
+    return (
+      <div className="rounded-2xl border border-[#e6e4e1] bg-white p-6 text-sm text-slate-500 shadow-soft">
+        Please sign in to view files.
+      </div>
+    );
+  }
 
   const where = {
     ...(type ? { type } : {}),
@@ -22,6 +34,15 @@ export default async function FilesPage({ searchParams }: { searchParams: Search
           ],
         }
       : {}),
+    step: {
+      plan: {
+        task: {
+          request: {
+            userId,
+          },
+        },
+      },
+    },
   };
 
   const files = await prisma.fileArtifact.findMany({

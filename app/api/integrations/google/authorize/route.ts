@@ -1,12 +1,20 @@
 import { prisma } from "@/lib/db";
 import { getGoogleAuthUrl } from "@/lib/integrations/google";
+import { authOptions } from "@/lib/auth";
+import { getServerSession } from "next-auth";
 
 export async function GET() {
   try {
+    const session = await getServerSession(authOptions);
+    const userId = session?.user?.id;
+    if (!userId) {
+      return Response.json({ error: { message: "Unauthorized" } }, { status: 401 });
+    }
+
     const state = crypto.randomUUID();
 
     const existing = await prisma.integration.findUnique({
-      where: { provider: "google_calendar" },
+      where: { provider_userId: { provider: "google", userId } },
     });
 
     const mergedMetadata = {
@@ -19,15 +27,16 @@ export async function GET() {
     };
 
     await prisma.integration.upsert({
-      where: { provider: "google_calendar" },
+      where: { provider_userId: { provider: "google", userId } },
       update: {
         status: "pending",
         metadata: mergedMetadata,
       },
       create: {
-        provider: "google_calendar",
+        provider: "google",
         status: "pending",
         metadata: mergedMetadata,
+        userId,
       },
     });
 

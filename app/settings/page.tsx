@@ -16,6 +16,7 @@ const sections = [
       { label: "Forms", description: "Inferred form fields and suggestions.", href: "/forms" },
       { label: "Files", description: "Stored artifacts and search.", href: "/files" },
       { label: "Deadlines", description: "Escalating reminders calendar.", href: "/deadlines" },
+      { label: "Job applications", description: "Manual tracking + Gmail import.", href: "/job-applications" },
     ],
   },
   {

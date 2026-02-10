@@ -1,8 +1,16 @@
 import { prisma } from "@/lib/db";
 import { exchangeGoogleCode } from "@/lib/integrations/google";
+import { authOptions } from "@/lib/auth";
+import { getServerSession } from "next-auth";
 
 export async function GET(request: Request) {
   try {
+    const session = await getServerSession(authOptions);
+    const userId = session?.user?.id;
+    if (!userId) {
+      return Response.json({ error: { message: "Unauthorized" } }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const code = searchParams.get("code");
     const state = searchParams.get("state");
@@ -12,7 +20,7 @@ export async function GET(request: Request) {
     }
 
     const integration = await prisma.integration.findUnique({
-      where: { provider: "google_calendar" },
+      where: { provider_userId: { provider: "google", userId } },
     });
 
     const metadata = (integration?.metadata as Record<string, unknown> | null) ?? {};

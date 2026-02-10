@@ -1,7 +1,15 @@
 import { prisma } from "@/lib/db";
+import { authOptions } from "@/lib/auth";
+import { getServerSession } from "next-auth";
 
 export async function PATCH(request: Request, { params }: { params: { id: string } }) {
   try {
+    const session = await getServerSession(authOptions);
+    const userId = session?.user?.id;
+    if (!userId) {
+      return Response.json({ error: { message: "Unauthorized" } }, { status: 401 });
+    }
+
     const body = await request.json().catch(() => null);
     const subject = body?.subject?.trim();
     const draftBody = body?.body?.trim();
@@ -11,8 +19,19 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       return Response.json({ error: { message: "Subject and body are required" } }, { status: 400 });
     }
 
-    const log = await prisma.executionLog.findUnique({
-      where: { id: params.id },
+    const log = await prisma.executionLog.findFirst({
+      where: {
+        id: params.id,
+        step: {
+          plan: {
+            task: {
+              request: {
+                userId,
+              },
+            },
+          },
+        },
+      },
     });
 
     if (!log) {

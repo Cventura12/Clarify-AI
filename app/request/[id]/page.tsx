@@ -5,15 +5,20 @@ import TaskEditor from "@/components/TaskEditor";
 import ExecutionLogList from "@/components/ExecutionLogList";
 import PlanRunList from "@/components/PlanRunList";
 import { prisma } from "@/lib/db";
+import { authOptions } from "@/lib/auth";
 import type { TaskInterpretation } from "@/lib/schemas/interpret";
+import { getServerSession } from "next-auth";
 
 export default async function RequestDetailPage({
   params,
 }: {
   params: { id: string };
 }) {
+  const session = await getServerSession(authOptions);
+  const userId = session?.user?.id ?? null;
+
   const request = await prisma.request.findUnique({
-    where: { id: params.id },
+    where: { id: params.id, userId: userId ?? undefined },
     include: {
       tasks: {
         include: {

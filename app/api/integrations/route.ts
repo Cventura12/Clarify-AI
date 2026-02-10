@@ -1,5 +1,7 @@
 import { z } from "zod";
 import { prisma } from "@/lib/db";
+import { authOptions } from "@/lib/auth";
+import { getServerSession } from "next-auth";
 
 const IntegrationSchema = z.object({
   provider: z.string(),
@@ -10,7 +12,14 @@ const IntegrationSchema = z.object({
 
 export async function GET() {
   try {
+    const session = await getServerSession(authOptions);
+    const userId = session?.user?.id;
+    if (!userId) {
+      return Response.json({ error: { message: "Unauthorized" } }, { status: 401 });
+    }
+
     const integrations = await prisma.integration.findMany({
+      where: { userId },
       include: {
         syncs: { orderBy: { createdAt: "desc" }, take: 1 },
       },
@@ -25,6 +34,12 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const session = await getServerSession(authOptions);
+    const userId = session?.user?.id;
+    if (!userId) {
+      return Response.json({ error: { message: "Unauthorized" } }, { status: 401 });
+    }
+
     const body = await request.json().catch(() => null);
     const parsed = IntegrationSchema.safeParse(body);
     if (!parsed.success) {
@@ -35,7 +50,9 @@ export async function POST(request: Request) {
     }
 
     const existing = await prisma.integration.findUnique({
-      where: { provider: parsed.data.provider },
+      where: {
+        provider_userId: { provider: parsed.data.provider, userId },
+      },
     });
 
     const mergeMetadata = (
@@ -64,6 +81,7 @@ export async function POST(request: Request) {
             provider: parsed.data.provider,
             status: parsed.data.status ?? "connected",
             metadata: parsed.data.metadata ?? {},
+            userId,
           },
         });
 

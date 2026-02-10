@@ -5,11 +5,14 @@ import NotificationPanel from "@/components/NotificationPanel";
 import ProfileSummaryCard from "@/components/ProfileSummaryCard";
 import RunStatsCard from "@/components/RunStatsCard";
 import InsightsPanel from "@/components/InsightsPanel";
+import styles from "./dashboard.module.css";
 import { getFollowUpSuggestions, getScheduledFollowUps } from "@/lib/communications/followups";
 import { buildPatternInsights } from "@/lib/context/suggestions";
 import { prisma } from "@/lib/db";
+import { authOptions } from "@/lib/auth";
 import type { Task } from "@prisma/client";
 import type { JsonValue } from "@prisma/client/runtime/library";
+import { getServerSession } from "next-auth";
 
 type CardItem = {
   id: string;
@@ -37,16 +40,16 @@ const formatDeadline = (dates: JsonValue) => {
 };
 
 const urgencyStyles: Record<string, string> = {
-  critical: "bg-red-50 text-red-700",
-  high: "bg-red-50 text-red-700",
-  medium: "bg-slate-100 text-slate-700",
-  low: "bg-emerald-50 text-emerald-700",
+  critical: styles.urgencyCritical,
+  high: styles.urgencyHigh,
+  medium: styles.urgencyMedium,
+  low: styles.urgencyLow,
 };
 
 const StatusGlyph = ({ kind }: { kind: "clock" | "check" | "alert" }) => {
   if (kind === "check") {
     return (
-      <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
+      <svg viewBox="0 0 24 24" className={styles.icon} fill="none" stroke="currentColor" strokeWidth="2">
         <circle cx="12" cy="12" r="9" />
         <path d="M8 12l3 3 5-5" />
       </svg>
@@ -54,7 +57,7 @@ const StatusGlyph = ({ kind }: { kind: "clock" | "check" | "alert" }) => {
   }
   if (kind === "alert") {
     return (
-      <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
+      <svg viewBox="0 0 24 24" className={styles.icon} fill="none" stroke="currentColor" strokeWidth="2">
         <circle cx="12" cy="12" r="9" />
         <path d="M12 7v6" />
         <path d="M12 16h.01" />
@@ -62,7 +65,7 @@ const StatusGlyph = ({ kind }: { kind: "clock" | "check" | "alert" }) => {
     );
   }
   return (
-    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg viewBox="0 0 24 24" className={styles.icon} fill="none" stroke="currentColor" strokeWidth="2">
       <circle cx="12" cy="12" r="9" />
       <path d="M12 7v5l3 2" />
     </svg>
@@ -131,14 +134,22 @@ const filterCards = (cards: CardItem[], view: string) => {
 };
 
 export default async function DashboardPage() {
+  const session = await getServerSession(authOptions);
+  const userId = session?.user?.id ?? null;
+
   const requests = await prisma.request.findMany({
+    where: userId ? { userId } : undefined,
     include: {
       tasks: true,
     },
     orderBy: { createdAt: "desc" },
   });
-  const profile = await prisma.userProfile.findFirst();
-  const preferences = await prisma.userPreference.findMany();
+  const profile = await prisma.userProfile.findFirst({
+    where: userId ? { userId } : undefined,
+  });
+  const preferences = await prisma.userPreference.findMany({
+    where: userId ? { userId } : undefined,
+  });
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
   const planRuns = await prisma.planRun.findMany({
     where: { createdAt: { gte: sevenDaysAgo } },
@@ -194,31 +205,33 @@ export default async function DashboardPage() {
 
   return (
     <DashboardMotion>
-      <div className="space-y-12">
-        <section className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr]">
-          <div className="space-y-6">
-            <header className="space-y-3" data-motion="hero">
-              <div className="flex items-center gap-3">
-                <span className="h-[2px] w-8 rounded-full bg-gradient-to-r from-indigo-500 via-cyan-400 to-emerald-400" />
-                <p className="text-[11px] uppercase tracking-[0.35em] text-slate-400">Command center</p>
+      <div className={styles.dashboard}>
+        <div className={`${styles.orb} ${styles.orbOne}`} data-motion="orb" />
+        <div className={`${styles.orb} ${styles.orbTwo}`} data-motion="orb" />
+        <section className={styles.heroGrid}>
+          <div className={styles.heroStack}>
+            <header className={styles.heroHeader}>
+              <div className={styles.heroLabel} data-motion="hero-kicker">
+                <span className={styles.gradientLine} />
+                <p className={styles.heroKicker}>Command center</p>
               </div>
-              <h1 className="font-display text-4xl text-slate-900">Good morning, Caleb.</h1>
-              <div className="flex flex-wrap items-center gap-3 text-sm text-slate-500">
-                <span className="rounded-full border border-slate-200 bg-white/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-600">
+              <h1 className={styles.heroTitle} data-motion="hero-title">Good morning, Caleb.</h1>
+              <div className={styles.pillRow} data-motion="hero-pills">
+                <span className={styles.pill}>
                   {activeCount || 3} active threads
                 </span>
-                <span className="rounded-full border border-slate-200 bg-white/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-600">
+                <span className={styles.pill}>
                   {blockedCount || 1} blocked item
                 </span>
               </div>
             </header>
 
-            <div data-motion="hero">
+            <div data-motion="hero-command">
               <CommandBar />
             </div>
           </div>
 
-          <div className="space-y-6">
+          <div className={styles.heroSide}>
             <NotificationPanel suggestions={suggestions} />
             <RunStatsCard
               totalRuns={runStats.totalRuns}
@@ -230,69 +243,69 @@ export default async function DashboardPage() {
           </div>
         </section>
 
-        <section className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+        <section className={styles.secondaryGrid}>
           <ProfileSummaryCard profile={profile} />
           <InsightsPanel insights={insights} />
         </section>
 
-        <section className="space-y-5" data-motion="hero">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <div className="flex items-center gap-3">
-                <span className="h-[2px] w-8 rounded-full bg-gradient-to-r from-rose-400 via-amber-400 to-emerald-300" />
-                <p className="text-[11px] uppercase tracking-[0.35em] text-slate-400">Threads</p>
+        <section className={styles.threadSection}>
+          <div className={styles.sectionHeader}>
+            <div className={styles.sectionTitle}>
+              <div className={styles.sectionLabel}>
+                <span className={styles.gradientLineWarm} />
+                <p className={styles.sectionKicker}>Threads</p>
               </div>
-              <p className="text-lg font-semibold text-slate-900">Active requests</p>
+              <p className={styles.sectionHeadline}>Active requests</p>
             </div>
             <Link
               href="/requests"
-              className="text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-500 hover:text-slate-700"
+              className={styles.sectionLink}
             >
               View all
             </Link>
           </div>
 
-          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+          <div className={styles.cardsGrid}>
             {filteredCards.map((card) => (
               <div
                 key={card.id}
                 data-motion="card"
-                className="rounded-3xl border border-slate-200/80 bg-white/90 p-5 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur"
+                className={styles.taskCard}
               >
-                <div className="flex items-center justify-between text-xs">
+                <div className={styles.cardMeta}>
                   <span
-                    className={`rounded-full px-2 py-1 font-semibold capitalize ${urgencyStyles[card.urgency] ?? "bg-slate-100 text-slate-700"}`}
+                    className={`${styles.urgencyBadge} ${urgencyStyles[card.urgency] ?? styles.urgencyMedium}`}
                   >
                     {card.urgency}
                   </span>
-                  <span className="text-slate-400">{card.meta}</span>
+                  <span className={styles.cardMetaText}>{card.meta}</span>
                 </div>
-                <h3 className="mt-3 text-base font-semibold text-slate-900">{card.title}</h3>
-                <div className="mt-3 flex items-center gap-2 text-sm text-slate-500">
+                <h3 className={styles.cardTitle}>{card.title}</h3>
+                <div className={styles.cardStatus}>
                   <span
-                    className={`flex h-6 w-6 items-center justify-center rounded-full ${
+                    className={`${styles.statusIcon} ${
                       card.statusKind === "alert"
-                        ? "bg-rose-50 text-rose-600"
+                        ? styles.statusAlert
                         : card.statusKind === "check"
-                        ? "bg-emerald-50 text-emerald-600"
-                        : "bg-slate-100 text-slate-500"
+                        ? styles.statusCheck
+                        : styles.statusClock
                     }`}
                   >
                     <StatusGlyph kind={card.statusKind} />
                   </span>
                   <span>{card.statusText}</span>
                 </div>
-                <div className="mt-4 flex justify-end text-xs text-slate-400">
+                <div className={styles.cardFooter}>
                   {card.requestId ? (
-                    <Link className="flex items-center gap-1" href={`/request/${card.requestId}`}>
+                    <Link className={styles.cardLink} href={`/request/${card.requestId}`}>
                       View details
-                      <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2">
+                      <svg viewBox="0 0 24 24" className={styles.cardLinkIcon} fill="none" stroke="currentColor" strokeWidth="2">
                         <path d="M7 17L17 7" />
                         <path d="M9 7h8v8" />
                       </svg>
                     </Link>
                   ) : (
-                    <span className="flex items-center gap-1">View details</span>
+                    <span className={styles.cardLink}>View details</span>
                   )}
                 </div>
               </div>

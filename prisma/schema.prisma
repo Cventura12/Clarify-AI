@@ -9,108 +9,96 @@ datasource db {
 
 model Request {
   id            String   @id @default(cuid())
-  rawInput      String   @db.Text
+  userId        String?
+  rawInput      String
   requestCount  Int      @default(1)
   crossTaskDeps Json?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
-
   tasks         Task[]
+  user          User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Task {
   id                 String   @id @default(cuid())
   requestId          String
-  request            Request  @relation(fields: [requestId], references: [id], onDelete: Cascade)
-
   title              String
-  summary            String   @db.Text
+  summary            String
   domain             String
   urgency            String
   complexity         String
-
   entities           Json
   dates              Json
   status             Json
   ambiguities        Json
   hiddenDependencies Json
-
   taskStatus         String   @default("interpreted")
-  confidenceScore    Float    @default(0.5)
-
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
-
+  confidenceScore    Float    @default(0.5)
   plan               Plan?
+  request            Request  @relation(fields: [requestId], references: [id], onDelete: Cascade)
 }
 
 model Plan {
-  id                    String   @id @default(cuid())
-  taskId                String   @unique
-  task                  Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
-
-  totalSteps            Int
-  estimatedTotalEffort  String
-  deadline              DateTime?
-
-  delegationSummary     Json
-  riskFlags             Json
-  nextAction            Json
-  confidenceScore       Float    @default(0.5)
-
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
-
-  steps                 Step[]
-  runs                  PlanRun[]
+  id                   String    @id @default(cuid())
+  taskId               String    @unique
+  totalSteps           Int
+  estimatedTotalEffort String
+  deadline             DateTime?
+  delegationSummary    Json
+  riskFlags            Json
+  nextAction           Json
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  confidenceScore      Float     @default(0.5)
+  task                 Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  runs                 PlanRun[]
+  steps                Step[]
 }
 
 model PlanRun {
   id                  String   @id @default(cuid())
   planId              String
-  plan                Plan     @relation(fields: [planId], references: [id], onDelete: Cascade)
   executedCount       Int
   skippedUnauthorized Int
   skippedDependencies Int
   totalSteps          Int
   status              String   @default("completed")
   createdAt           DateTime @default(now())
+  plan                Plan     @relation(fields: [planId], references: [id], onDelete: Cascade)
 }
 
 model Step {
-  id            String   @id @default(cuid())
+  id            String         @id @default(cuid())
   planId        String
-  plan          Plan     @relation(fields: [planId], references: [id], onDelete: Cascade)
-
   stepNumber    Int
-  action        String   @db.Text
-  detail        String   @db.Text
+  action        String
+  detail        String
   dependencies  Json
   effort        String
   delegation    String
   suggestedDate DateTime?
-  status        String   @default("pending")
-
+  status        String         @default("pending")
   authorizedAt  DateTime?
   completedAt   DateTime?
-  outcome       String?  @db.Text
-
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
+  outcome       String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
   executionLogs ExecutionLog[]
   fileArtifacts FileArtifact[]
+  plan          Plan           @relation(fields: [planId], references: [id], onDelete: Cascade)
 }
 
 model ExecutionLog {
   id        String   @id @default(cuid())
   stepId    String
-  step      Step     @relation(fields: [stepId], references: [id], onDelete: Cascade)
   action    String
   status    String
   actor     String
   detail    Json?
   createdAt DateTime @default(now())
+  step      Step     @relation(fields: [stepId], references: [id], onDelete: Cascade)
 }
 
 model FileArtifact {
@@ -120,14 +108,15 @@ model FileArtifact {
   source      String   @default("system")
   url         String
   contentType String?
-  contentText String?  @db.Text
+  contentText String?
   stepId      String?
-  step        Step?    @relation(fields: [stepId], references: [id], onDelete: SetNull)
   createdAt   DateTime @default(now())
+  step        Step?    @relation(fields: [stepId], references: [id])
 }
 
 model UserProfile {
   id             String   @id @default(cuid())
+  userId         String?  @unique
   fullName       String?
   email          String?
   phone          String?
@@ -142,75 +131,113 @@ model UserProfile {
   linkedIn       String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+  user           User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model UserPreference {
   id        String   @id @default(cuid())
+  userId    String?
   key       String
   value     String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model ContextNode {
-  id        String   @id @default(cuid())
+  id        String        @id @default(cuid())
   label     String
   type      String
   metadata  Json?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
   fromEdges ContextEdge[] @relation("FromNode")
   toEdges   ContextEdge[] @relation("ToNode")
 }
 
 model ContextEdge {
-  id        String   @id @default(cuid())
+  id        String      @id @default(cuid())
   fromId    String
   toId      String
   relation  String
-  createdAt DateTime @default(now())
-
+  createdAt DateTime    @default(now())
   from      ContextNode @relation("FromNode", fields: [fromId], references: [id], onDelete: Cascade)
   to        ContextNode @relation("ToNode", fields: [toId], references: [id], onDelete: Cascade)
 }
 
 model MemoryEntry {
   id        String   @id @default(cuid())
+  userId    String?
   type      String
-  content   String   @db.Text
+  content   String
   source    String   @default("system")
   requestId String?
   createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Integration {
-  id        String   @id @default(cuid())
-  provider  String   @unique
-  status    String   @default("disconnected")
+  id        String             @id @default(cuid())
+  provider  String
+  userId    String?
+  status    String             @default("disconnected")
   metadata  Json?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
   events    IntegrationEvent[]
   syncs     IntegrationSync[]
+  user      User?              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, userId])
+}
+
+model JobApplication {
+  id            String   @id @default(cuid())
+  userId        String?
+  company       String
+  role          String
+  status        String   @default("applied")
+  source        String   @default("manual")
+  appliedAt     DateTime?
+  lastFollowUp  DateTime?
+  emailThreadId String?
+  portalUrl     String?
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  user          User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id              String            @id @default(cuid())
+  email           String            @unique
+  name            String?
+  image           String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  requests        Request[]
+  profile         UserProfile?
+  preferences     UserPreference[]
+  memoryEntries   MemoryEntry[]
+  integrations    Integration[]
+  jobApplications JobApplication[]
 }
 
 model IntegrationEvent {
-  id            String       @id @default(cuid())
+  id            String      @id @default(cuid())
   integrationId String
-  integration   Integration  @relation(fields: [integrationId], references: [id], onDelete: Cascade)
   eventType     String
   payload       Json?
-  receivedAt    DateTime     @default(now())
+  receivedAt    DateTime    @default(now())
+  integration   Integration @relation(fields: [integrationId], references: [id], onDelete: Cascade)
 }
 
 model IntegrationSync {
-  id            String       @id @default(cuid())
+  id            String      @id @default(cuid())
   integrationId String
-  integration   Integration  @relation(fields: [integrationId], references: [id], onDelete: Cascade)
   status        String
   message       String?
   result        Json?
-  createdAt     DateTime     @default(now())
+  createdAt     DateTime    @default(now())
+  integration   Integration @relation(fields: [integrationId], references: [id], onDelete: Cascade)
 }

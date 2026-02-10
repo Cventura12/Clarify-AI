@@ -1,0 +1,65 @@
+.card {
+  border-radius: 28px;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  padding: 24px;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.kicker {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.35em;
+  color: #98a2b3;
+  margin: 0;
+}
+
+.title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0;
+}
+
+.subtitle {
+  font-size: 12px;
+  color: #94a3b8;
+  margin: 4px 0 0;
+}
+
+.count {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.metrics {
+  margin-top: 16px;
+  display: grid;
+  gap: 10px;
+  font-size: 14px;
+  color: #667085;
+}
+
+.metricRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.metricValue {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.footer {
+  margin-top: 16px;
+  font-size: 12px;
+  color: #94a3b8;
+}

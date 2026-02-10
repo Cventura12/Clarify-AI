@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/db";
 import { buildEscalatingReminders } from "@/lib/deadlines/reminders";
+import { authOptions } from "@/lib/auth";
+import { getServerSession } from "next-auth";
 
 const severityStyle: Record<string, string> = {
   critical: "bg-red-50 text-red-700",
@@ -17,7 +19,21 @@ const formatBucket = (daysUntil: number) => {
 };
 
 export default async function DeadlinesPage() {
-  const tasks = await prisma.task.findMany({ orderBy: { createdAt: "desc" } });
+  const session = await getServerSession(authOptions);
+  const userId = session?.user?.id;
+
+  if (!userId) {
+    return (
+      <div className="rounded-2xl border border-[#e6e4e1] bg-white p-6 text-sm text-slate-500 shadow-soft">
+        Please sign in to view deadlines.
+      </div>
+    );
+  }
+
+  const tasks = await prisma.task.findMany({
+    where: { request: { userId } },
+    orderBy: { createdAt: "desc" },
+  });
   const reminders = buildEscalatingReminders(tasks);
   const buckets = reminders.reduce<Record<string, typeof reminders>>((acc, reminder) => {
     const key = formatBucket(reminder.daysUntil);

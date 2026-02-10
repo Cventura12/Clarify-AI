@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
+import { authOptions } from "@/lib/auth";
+import { getServerSession } from "next-auth";
 
 const statusTone: Record<string, string> = {
   interpreted: "bg-slate-100 text-slate-600",
@@ -35,8 +37,11 @@ export default async function RequestsPage({
 }: {
   searchParams: { view?: string };
 }) {
+  const session = await getServerSession(authOptions);
+  const userId = session?.user?.id ?? null;
   const view = searchParams.view ?? "all";
   const requests = await prisma.request.findMany({
+    where: userId ? { userId } : undefined,
     include: {
       tasks: true,
     },

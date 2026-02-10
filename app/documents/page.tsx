@@ -1,4 +1,6 @@
 import { prisma } from "@/lib/db";
+import { authOptions } from "@/lib/auth";
+import { getServerSession } from "next-auth";
 import type { JsonValue } from "@prisma/client/runtime/library";
 
 const isRecord = (value: JsonValue | null): value is Record<string, JsonValue> =>
@@ -31,7 +33,29 @@ const extractDocuments = (logs: Array<{ id: string; detail: JsonValue | null; cr
 };
 
 export default async function DocumentsPage() {
+  const session = await getServerSession(authOptions);
+  const userId = session?.user?.id;
+
+  if (!userId) {
+    return (
+      <div className="rounded-2xl border border-[#e6e4e1] bg-white p-6 text-sm text-slate-500 shadow-soft">
+        Please sign in to view documents.
+      </div>
+    );
+  }
+
   const logs = await prisma.executionLog.findMany({
+    where: {
+      step: {
+        plan: {
+          task: {
+            request: {
+              userId,
+            },
+          },
+        },
+      },
+    },
     orderBy: { createdAt: "desc" },
     take: 50,
   });

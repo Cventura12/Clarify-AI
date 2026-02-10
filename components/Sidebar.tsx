@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import gsap from "gsap";
 
 const navItems = [
   { label: "Dashboard", href: "/", icon: "grid" },
@@ -136,6 +137,9 @@ const Icon = ({ name }: { name: string }) => {
 export default function Sidebar() {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  const sidebarRef = useRef<HTMLElement>(null);
+  const navRef = useRef<HTMLDivElement>(null);
+  const hasAnimatedRef = useRef(false);
 
   const items = useMemo(
     () =>
@@ -145,6 +149,42 @@ export default function Sidebar() {
       })),
     [pathname]
   );
+
+  useEffect(() => {
+    if (!sidebarRef.current) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const isDesktop = window.matchMedia("(min-width: 1024px)").matches;
+    if (!isDesktop) return;
+    if (hasAnimatedRef.current) return;
+
+    const context = gsap.context(() => {
+      gsap.from(sidebarRef.current, {
+        x: -12,
+        opacity: 0,
+        duration: 0.45,
+        ease: "power2.out",
+      });
+    }, sidebarRef);
+
+    hasAnimatedRef.current = true;
+    return () => context.revert();
+  }, []);
+
+  useEffect(() => {
+    if (!sidebarRef.current) return;
+    if (!isOpen) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const isDesktop = window.matchMedia("(min-width: 1024px)").matches;
+    if (isDesktop) return;
+
+    gsap.fromTo(
+      sidebarRef.current,
+      { x: -320, opacity: 0 },
+      { x: 0, opacity: 1, duration: 0.35, ease: "power3.out" }
+    );
+  }, [isOpen]);
 
   return (
     <>
@@ -174,7 +214,8 @@ export default function Sidebar() {
       ) : null}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 transform border-r border-white/10 bg-gradient-to-b from-[#15161a] via-[#111216] to-[#0b0c0f] text-white transition lg:static lg:translate-x-0 ${
+        ref={sidebarRef}
+        className={`fixed inset-y-0 left-0 z-50 w-64 transform border-r border-white/10 bg-gradient-to-b from-[#1a1b21] via-[#14151a] to-[#0f1014] text-white transition lg:static lg:translate-x-0 ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -203,16 +244,16 @@ export default function Sidebar() {
           <p className="mt-1 font-medium text-white/80">Ready to interpret requests.</p>
         </div>
 
-        <nav className="flex flex-col gap-1 px-4 py-6 text-sm">
+        <nav ref={navRef} className="flex flex-col gap-1 px-4 py-6 text-sm">
           {items.map((item) => (
             <Link
               key={item.label}
               href={item.href}
-              onClick={() => setIsOpen(false)}
+              data-nav-item
               className={`flex items-center gap-3 rounded-xl border border-transparent px-3 py-2.5 transition ${
                 item.isActive
-                  ? "border-white/10 bg-white/10 text-white"
-                  : "text-white/60 hover:border-white/5 hover:bg-white/5 hover:text-white"
+                  ? "border-white/35 bg-white/30 text-white shadow-[0_8px_20px_rgba(15,15,15,0.35)] opacity-100"
+                  : "text-slate-100 opacity-100 hover:border-white/20 hover:bg-white/10 hover:text-white"
               }`}
             >
               <Icon name={item.icon} />

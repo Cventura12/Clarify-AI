@@ -1,9 +1,33 @@
 import DraftCard from "@/components/DraftCard";
 import { extractDraftsFromLogs } from "@/lib/communications/drafts";
 import { prisma } from "@/lib/db";
+import { authOptions } from "@/lib/auth";
+import { getServerSession } from "next-auth";
 
 export default async function DraftsPage() {
+  const session = await getServerSession(authOptions);
+  const userId = session?.user?.id;
+
+  if (!userId) {
+    return (
+      <div className="rounded-2xl border border-[#e6e4e1] bg-white p-6 text-sm text-slate-500 shadow-soft">
+        Please sign in to view drafts.
+      </div>
+    );
+  }
+
   const logs = await prisma.executionLog.findMany({
+    where: {
+      step: {
+        plan: {
+          task: {
+            request: {
+              userId,
+            },
+          },
+        },
+      },
+    },
     orderBy: { createdAt: "desc" },
     take: 50,
   });

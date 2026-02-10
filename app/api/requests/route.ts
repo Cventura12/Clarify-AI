@@ -1,8 +1,17 @@
 import { prisma } from "@/lib/db";
+import { authOptions } from "@/lib/auth";
+import { getServerSession } from "next-auth";
 
 export async function GET() {
   try {
+    const session = await getServerSession(authOptions);
+    const userId = session?.user?.id;
+    if (!userId) {
+      return Response.json({ error: { message: "Unauthorized" } }, { status: 401 });
+    }
+
     const requests = await prisma.request.findMany({
+      where: { userId },
       include: {
         tasks: {
           include: {
@@ -22,6 +31,12 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const session = await getServerSession(authOptions);
+    const userId = session?.user?.id;
+    if (!userId) {
+      return Response.json({ error: { message: "Unauthorized" } }, { status: 401 });
+    }
+
     const body = await request.json().catch(() => null);
     const rawInput = body?.rawInput?.trim();
 
@@ -31,6 +46,7 @@ export async function POST(request: Request) {
 
     const created = await prisma.request.create({
       data: {
+        userId,
         rawInput,
         requestCount: body?.requestCount ?? 1,
         crossTaskDeps: body?.crossTaskDeps ?? [],

@@ -3,6 +3,8 @@ import { fallbackPlan } from "@/lib/ai/fallback";
 import { scorePlan } from "@/lib/ai/confidence";
 import { TaskInterpretationSchema } from "@/lib/schemas/interpret";
 import { prisma } from "@/lib/db";
+import { authOptions } from "@/lib/auth";
+import { getServerSession } from "next-auth";
 
 const parseDate = (value: string | null | undefined) => {
   if (!value) return null;
@@ -12,6 +14,12 @@ const parseDate = (value: string | null | undefined) => {
 
 export async function POST(request: Request) {
   try {
+    const session = await getServerSession(authOptions);
+    const userId = session?.user?.id;
+    if (!userId) {
+      return Response.json({ error: { message: "Unauthorized" } }, { status: 401 });
+    }
+
     const body = await request.json().catch(() => null);
 
     let task = body?.task;
@@ -19,9 +27,10 @@ export async function POST(request: Request) {
     if (!task && body?.taskId) {
       const storedTask = await prisma.task.findUnique({
         where: { id: body.taskId },
+        include: { request: true },
       });
 
-      if (!storedTask) {
+      if (!storedTask || storedTask.request.userId !== userId) {
         return Response.json({ error: { message: "Task not found" } }, { status: 404 });
       }
 

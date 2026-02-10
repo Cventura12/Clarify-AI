@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { inferFormFields } from "@/lib/forms/fields";
 import { getProfile } from "@/lib/profile";
+import { authOptions } from "@/lib/auth";
+import { getServerSession } from "next-auth";
 
 const FormSchema = z.object({
   context: z.string(),
@@ -8,6 +10,12 @@ const FormSchema = z.object({
 
 export async function POST(request: Request) {
   try {
+    const session = await getServerSession(authOptions);
+    const userId = session?.user?.id;
+    if (!userId) {
+      return Response.json({ error: { message: "Unauthorized" } }, { status: 401 });
+    }
+
     const body = await request.json().catch(() => null);
     const parsed = FormSchema.safeParse(body);
 
@@ -18,7 +26,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const profile = await getProfile();
+    const profile = await getProfile(userId);
     return Response.json({ fields: inferFormFields(parsed.data.context, profile) });
   } catch (error) {
     console.error("Form fields error", error);

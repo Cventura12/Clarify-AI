@@ -1,16 +1,22 @@
 import IntegrationCard from "@/components/IntegrationCard";
 import IntegrationPlaceholder from "@/components/IntegrationPlaceholder";
 import { prisma } from "@/lib/db";
+import { authOptions } from "@/lib/auth";
+import { getServerSession } from "next-auth";
 
 export default async function IntegrationsPage() {
+  const session = await getServerSession(authOptions);
+  const userId = session?.user?.id ?? null;
+
   const integrations = await prisma.integration.findMany({
+    where: userId ? { userId } : undefined,
     include: {
       syncs: { orderBy: { createdAt: "desc" }, take: 1 },
     },
     orderBy: { provider: "asc" },
   });
 
-  const googleIntegration = integrations.find((integration) => integration.provider === "google_calendar");
+  const googleIntegration = integrations.find((integration) => integration.provider === "google");
 
   return (
     <div className="space-y-6">
@@ -22,9 +28,9 @@ export default async function IntegrationsPage() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <IntegrationCard
-          provider="google_calendar"
-          name="Google Calendar"
-          description="Sync task deadlines into your calendar."
+          provider="google"
+          name="Google Workspace"
+          description="Connect Gmail + Calendar for live execution."
           status={googleIntegration?.status ?? "disconnected"}
           metadata={(googleIntegration?.metadata as Record<string, unknown> | null) ?? undefined}
           lastSync={googleIntegration?.syncs?.[0]?.createdAt.toLocaleString() ?? null}

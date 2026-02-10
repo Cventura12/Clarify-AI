@@ -2,6 +2,8 @@ import { z } from "zod";
 import { getPreferences, upsertPreferences } from "@/lib/preferences";
 import { normalizePreferenceKey, syncPreferencesToContext, syncProfileToContext } from "@/lib/context";
 import { getProfile } from "@/lib/profile";
+import { authOptions } from "@/lib/auth";
+import { getServerSession } from "next-auth";
 
 const PreferencesSchema = z.array(
   z.object({
@@ -12,7 +14,13 @@ const PreferencesSchema = z.array(
 
 export async function GET() {
   try {
-    const preferences = await getPreferences();
+    const session = await getServerSession(authOptions);
+    const userId = session?.user?.id;
+    if (!userId) {
+      return Response.json({ error: { message: "Unauthorized" } }, { status: 401 });
+    }
+
+    const preferences = await getPreferences(userId);
     return Response.json({ preferences });
   } catch (error) {
     console.error("Preferences GET error", error);
@@ -22,6 +30,12 @@ export async function GET() {
 
 export async function PUT(request: Request) {
   try {
+    const session = await getServerSession(authOptions);
+    const userId = session?.user?.id;
+    if (!userId) {
+      return Response.json({ error: { message: "Unauthorized" } }, { status: 401 });
+    }
+
     const body = await request.json().catch(() => null);
     const parsed = PreferencesSchema.safeParse(body);
     if (!parsed.success) {
@@ -38,8 +52,8 @@ export async function PUT(request: Request) {
         value: pref.value.trim(),
       }));
 
-    const preferences = await upsertPreferences(normalized);
-    const profile = await getProfile();
+    const preferences = await upsertPreferences(userId, normalized);
+    const profile = await getProfile(userId);
     const userNode = await syncProfileToContext(profile);
     await syncPreferencesToContext(userNode, preferences);
 

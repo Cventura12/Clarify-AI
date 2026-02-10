@@ -3,6 +3,8 @@ import { upsertProfile } from "@/lib/profile";
 import { upsertPreferences } from "@/lib/preferences";
 import { addMemoryEntry } from "@/lib/memory";
 import { normalizePreferenceKey, syncPreferencesToContext, syncProfileToContext } from "@/lib/context";
+import { authOptions } from "@/lib/auth";
+import { getServerSession } from "next-auth";
 
 const ProfileSchema = z.object({
   fullName: z.string().optional(),
@@ -34,6 +36,12 @@ const OnboardingSchema = z.object({
 
 export async function POST(request: Request) {
   try {
+    const session = await getServerSession(authOptions);
+    const userId = session?.user?.id;
+    if (!userId) {
+      return Response.json({ error: { message: "Unauthorized" } }, { status: 401 });
+    }
+
     const body = await request.json().catch(() => null);
     const parsed = OnboardingSchema.safeParse(body);
     if (!parsed.success) {
@@ -43,7 +51,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const profile = await upsertProfile(parsed.data.profile);
+    const profile = await upsertProfile(userId, parsed.data.profile);
     const preferences = parsed.data.preferences ?? [];
     const normalized = preferences
       .filter((pref) => pref.key.trim() && pref.value.trim())
@@ -52,7 +60,7 @@ export async function POST(request: Request) {
         value: pref.value.trim(),
       }));
 
-    const savedPrefs = normalized.length ? await upsertPreferences(normalized) : [];
+    const savedPrefs = normalized.length ? await upsertPreferences(userId, normalized) : [];
     const userNode = await syncProfileToContext(profile);
     await syncPreferencesToContext(userNode, savedPrefs);
 
@@ -60,6 +68,7 @@ export async function POST(request: Request) {
       type: "onboarding",
       content: "Completed onboarding intake.",
       source: "user",
+      userId,
     });
 
     if (parsed.data.notes?.trim()) {
@@ -67,6 +76,7 @@ export async function POST(request: Request) {
         type: "preference",
         content: parsed.data.notes.trim(),
         source: "user",
+        userId,
       });
     }
 

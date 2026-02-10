@@ -1,9 +1,17 @@
 import { prisma } from "@/lib/db";
+import { authOptions } from "@/lib/auth";
+import { getServerSession } from "next-auth";
 
 export async function GET(_: Request, { params }: { params: { id: string } }) {
   try {
+    const session = await getServerSession(authOptions);
+    const userId = session?.user?.id;
+    if (!userId) {
+      return Response.json({ error: { message: "Unauthorized" } }, { status: 401 });
+    }
+
     const request = await prisma.request.findUnique({
-      where: { id: params.id },
+      where: { id: params.id, userId },
       include: {
         tasks: {
           include: {
@@ -26,10 +34,16 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
 
 export async function PATCH(request: Request, { params }: { params: { id: string } }) {
   try {
+    const session = await getServerSession(authOptions);
+    const userId = session?.user?.id;
+    if (!userId) {
+      return Response.json({ error: { message: "Unauthorized" } }, { status: 401 });
+    }
+
     const body = await request.json().catch(() => null);
 
     const updated = await prisma.request.update({
-      where: { id: params.id },
+      where: { id: params.id, userId },
       data: {
         rawInput: body?.rawInput,
         crossTaskDeps: body?.crossTaskDeps,

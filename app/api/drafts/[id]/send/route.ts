@@ -1,12 +1,32 @@
 import { prisma } from "@/lib/db";
-import { sendEmail } from "@/lib/communications/email";
+import { authOptions } from "@/lib/auth";
+import { getServerSession } from "next-auth";
+import { getGoogleIntegration } from "@/lib/integrations/googleAuth";
+import { sendGmailMessage } from "@/lib/integrations/gmail";
 
 export async function POST(request: Request, { params }: { params: { id: string } }) {
   try {
+    const session = await getServerSession(authOptions);
+    const userId = session?.user?.id;
+    if (!userId) {
+      return Response.json({ error: { message: "Unauthorized" } }, { status: 401 });
+    }
+
     const body = await request.json().catch(() => null);
     const toFromBody = body?.to?.trim();
-    const log = await prisma.executionLog.findUnique({
-      where: { id: params.id },
+    const log = await prisma.executionLog.findFirst({
+      where: {
+        id: params.id,
+        step: {
+          plan: {
+            task: {
+              request: {
+                userId,
+              },
+            },
+          },
+        },
+      },
     });
 
     if (!log) {
@@ -26,7 +46,16 @@ export async function POST(request: Request, { params }: { params: { id: string 
       return Response.json({ error: { message: "Draft subject and body are required to send" } }, { status: 400 });
     }
 
-    const delivery = await sendEmail({ to, subject, text });
+    let accessToken = "";
+    try {
+      const integration = await getGoogleIntegration(userId);
+      accessToken = integration.accessToken;
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Google integration not connected";
+      return Response.json({ error: { message } }, { status: 400 });
+    }
+    const delivery = await sendGmailMessage(accessToken, { to, subject, body: text });
 
     const updated = await prisma.executionLog.update({
       where: { id: params.id },
@@ -37,9 +66,10 @@ export async function POST(request: Request, { params }: { params: { id: string 
             ...draft,
             to,
             delivery: {
-              id: delivery?.id ?? null,
-              status: delivery?.status ?? "sent",
-              provider: "resend",
+              id: (delivery as { id?: string })?.id ?? null,
+              threadId: (delivery as { threadId?: string })?.threadId ?? null,
+              status: "sent",
+              provider: "gmail",
             },
             sentAt: new Date().toISOString(),
           },
@@ -57,9 +87,10 @@ export async function POST(request: Request, { params }: { params: { id: string 
           subject,
           to,
           delivery: {
-            id: delivery?.id ?? null,
-            status: delivery?.status ?? "sent",
-            provider: "resend",
+            id: (delivery as { id?: string })?.id ?? null,
+            threadId: (delivery as { threadId?: string })?.threadId ?? null,
+            status: "sent",
+            provider: "gmail",
           },
         },
       },

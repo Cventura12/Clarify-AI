@@ -1,5 +1,7 @@
 import { z } from "zod";
 import { prisma } from "@/lib/db";
+import { authOptions } from "@/lib/auth";
+import { getServerSession } from "next-auth";
 
 const ScheduleSchema = z.object({
   followUpAt: z.string().min(1),
@@ -7,6 +9,12 @@ const ScheduleSchema = z.object({
 
 export async function POST(request: Request, { params }: { params: { id: string } }) {
   try {
+    const session = await getServerSession(authOptions);
+    const userId = session?.user?.id;
+    if (!userId) {
+      return Response.json({ error: { message: "Unauthorized" } }, { status: 401 });
+    }
+
     const body = await request.json().catch(() => null);
     const parsed = ScheduleSchema.safeParse(body);
     if (!parsed.success) {
@@ -21,8 +29,19 @@ export async function POST(request: Request, { params }: { params: { id: string 
       return Response.json({ error: { message: "Invalid follow-up date" } }, { status: 400 });
     }
 
-    const log = await prisma.executionLog.findUnique({
-      where: { id: params.id },
+    const log = await prisma.executionLog.findFirst({
+      where: {
+        id: params.id,
+        step: {
+          plan: {
+            task: {
+              request: {
+                userId,
+              },
+            },
+          },
+        },
+      },
     });
 
     if (!log) {

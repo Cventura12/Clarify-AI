@@ -51,6 +51,17 @@ const logExecutionBlocked = async (step: Step, reason: string) => {
 export const executeAuthorizedStep = async (stepId: string): Promise<ExecuteResult> => {
   const step = await prisma.step.findUnique({
     where: { id: stepId },
+    include: {
+      plan: {
+        include: {
+          task: {
+            include: {
+              request: true,
+            },
+          },
+        },
+      },
+    },
   });
 
   if (!step) {
@@ -72,7 +83,8 @@ export const executeAuthorizedStep = async (stepId: string): Promise<ExecuteResu
     ? generateDocument({ context: step.action })
     : null;
   const isForm = detectFormAction(step.action, step.detail);
-  const profile = isForm ? await getProfile() : null;
+  const userId = step.plan?.task?.request?.userId ?? null;
+  const profile = isForm && userId ? await getProfile(userId) : null;
   const form = isForm ? { fields: inferFormFields(step.action, profile) } : null;
 
   const artifactUrls: Record<string, string> = {};

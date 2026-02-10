@@ -2,11 +2,19 @@ import { interpretInput } from "@/lib/ai/interpret";
 import { fallbackInterpretation } from "@/lib/ai/fallback";
 import { scoreInterpretation } from "@/lib/ai/confidence";
 import { prisma } from "@/lib/db";
+import { authOptions } from "@/lib/auth";
 import { addMemoryEntry } from "@/lib/memory";
 import { syncRequestHistoryNode } from "@/lib/context";
+import { getServerSession } from "next-auth";
 
 export async function POST(request: Request) {
   try {
+    const session = await getServerSession(authOptions);
+    const userId = session?.user?.id;
+    if (!userId) {
+      return Response.json({ error: { message: "Unauthorized" } }, { status: 401 });
+    }
+
     const body = await request.json().catch(() => null);
     const input = body?.input?.trim();
 
@@ -20,6 +28,7 @@ export async function POST(request: Request) {
 
     const createdRequest = await prisma.request.create({
       data: {
+        userId,
         rawInput: interpretation.raw_input,
         requestCount: interpretation.request_count,
         crossTaskDeps: interpretation.cross_task_dependencies,
@@ -51,6 +60,7 @@ export async function POST(request: Request) {
       content: interpretation.raw_input,
       source: "user",
       requestId: createdRequest.id,
+      userId,
     });
 
     await syncRequestHistoryNode(interpretation.raw_input);

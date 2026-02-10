@@ -1,8 +1,16 @@
 import { prisma } from "@/lib/db";
 import { TaskInterpretationSchema } from "@/lib/schemas/interpret";
+import { authOptions } from "@/lib/auth";
+import { getServerSession } from "next-auth";
 
 export async function PATCH(request: Request, { params }: { params: { id: string } }) {
   try {
+    const session = await getServerSession(authOptions);
+    const userId = session?.user?.id;
+    if (!userId) {
+      return Response.json({ error: { message: "Unauthorized" } }, { status: 401 });
+    }
+
     const body = await request.json().catch(() => null);
     const parsed = TaskInterpretationSchema.safeParse(body?.task);
 
@@ -18,6 +26,14 @@ export async function PATCH(request: Request, { params }: { params: { id: string
         { error: { message: "Task id does not match request" } },
         { status: 400 }
       );
+    }
+
+    const task = await prisma.task.findUnique({
+      where: { id: params.id },
+      include: { request: true },
+    });
+    if (!task || task.request.userId !== userId) {
+      return Response.json({ error: { message: "Task not found" } }, { status: 404 });
     }
 
     const updated = await prisma.task.update({

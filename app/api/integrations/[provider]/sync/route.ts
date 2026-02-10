@@ -1,11 +1,19 @@
 import { prisma } from "@/lib/db";
 import { buildEventsFromTasks, pushEventsToGoogle, refreshGoogleToken, testGoogleCalendarConnection } from "@/lib/integrations/google";
+import { authOptions } from "@/lib/auth";
+import { getServerSession } from "next-auth";
 
 export async function POST(
   request: Request,
   { params }: { params: { provider: string } }
 ) {
   try {
+    const session = await getServerSession(authOptions);
+    const userId = session?.user?.id;
+    if (!userId) {
+      return Response.json({ error: { message: "Unauthorized" } }, { status: 401 });
+    }
+
     const provider = params.provider;
     const body = await request.json().catch(() => null);
     const dryRun = Boolean(body?.dryRun);
@@ -13,14 +21,16 @@ export async function POST(
     const refreshOnly = Boolean(body?.refreshOnly);
 
     const integration = await prisma.integration.findUnique({
-      where: { provider },
+      where: {
+        provider_userId: { provider, userId },
+      },
     });
 
     if (!integration) {
       return Response.json({ error: { message: "Integration not found" } }, { status: 404 });
     }
 
-    if (provider !== "google_calendar") {
+    if (provider !== "google") {
       return Response.json({ error: { message: "Unsupported provider" } }, { status: 400 });
     }
 
@@ -88,7 +98,10 @@ export async function POST(
       return Response.json({ sync, result: test });
     }
 
-    const tasks = await prisma.task.findMany({ orderBy: { createdAt: "desc" } });
+    const tasks = await prisma.task.findMany({
+      where: { request: { userId } },
+      orderBy: { createdAt: "desc" },
+    });
     const events = buildEventsFromTasks(tasks);
     let result = { dryRun: true, events };
 

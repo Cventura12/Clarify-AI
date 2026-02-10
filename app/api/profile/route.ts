@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { getProfile, upsertProfile } from "@/lib/profile";
 import { syncProfileToContext } from "@/lib/context";
+import { authOptions } from "@/lib/auth";
+import { getServerSession } from "next-auth";
 
 const emptyToUndefined = (value: unknown) =>
   typeof value === "string" && value.trim() === "" ? undefined : value;
@@ -22,7 +24,12 @@ const ProfileSchema = z.object({
 
 export async function GET() {
   try {
-    const profile = await getProfile();
+    const session = await getServerSession(authOptions);
+    const userId = session?.user?.id;
+    if (!userId) {
+      return Response.json({ error: { message: "Unauthorized" } }, { status: 401 });
+    }
+    const profile = await getProfile(userId);
     return Response.json({ profile });
   } catch (error) {
     console.error("Profile GET error", error);
@@ -32,6 +39,12 @@ export async function GET() {
 
 export async function PUT(request: Request) {
   try {
+    const session = await getServerSession(authOptions);
+    const userId = session?.user?.id;
+    if (!userId) {
+      return Response.json({ error: { message: "Unauthorized" } }, { status: 401 });
+    }
+
     const body = await request.json().catch(() => null);
     const parsed = ProfileSchema.safeParse(body);
     if (!parsed.success) {
@@ -41,7 +54,7 @@ export async function PUT(request: Request) {
       );
     }
 
-    const profile = await upsertProfile(parsed.data);
+    const profile = await upsertProfile(userId, parsed.data);
     await syncProfileToContext(profile);
     return Response.json({ profile });
   } catch (error) {

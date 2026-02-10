@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/db";
 import FormsView from "@/components/FormsView";
+import { authOptions } from "@/lib/auth";
+import { getServerSession } from "next-auth";
 import type { JsonValue } from "@prisma/client/runtime/library";
 
 const isRecord = (value: JsonValue | null): value is Record<string, JsonValue> =>
@@ -66,11 +68,22 @@ export default async function FormsPage({
 }) {
   const selectedRequest = searchParams.request ?? "";
   const selectedTask = searchParams.task ?? "";
+  const session = await getServerSession(authOptions);
+  const userId = session?.user?.id;
+
+  if (!userId) {
+    return (
+      <div className="rounded-2xl border border-[#e6e4e1] bg-white p-6 text-sm text-slate-500 shadow-soft">
+        Please sign in to view forms.
+      </div>
+    );
+  }
 
   const tasks = await prisma.task.findMany({
     include: {
       request: true,
     },
+    where: { request: { userId } },
     orderBy: { createdAt: "desc" },
   });
 
@@ -88,6 +101,17 @@ export default async function FormsPage({
   }));
 
   const logs = await prisma.executionLog.findMany({
+    where: {
+      step: {
+        plan: {
+          task: {
+            request: {
+              userId,
+            },
+          },
+        },
+      },
+    },
     include: {
       step: {
         include: {

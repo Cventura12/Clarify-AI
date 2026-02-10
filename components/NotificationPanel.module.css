@@ -1,0 +1,130 @@
+.panel {
+  border-radius: 28px;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  padding: 24px;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+}
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.panelKicker {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.35em;
+  color: #98a2b3;
+  margin: 0;
+}
+
+.panelTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0;
+}
+
+.panelCount {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.panelList {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.panelItem {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-radius: 20px;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-left-width: 4px;
+  padding: 16px;
+}
+
+.itemDefault {
+  border-left-color: #cbd5f5;
+  background: #ffffff;
+}
+
+.itemFollowUp {
+  border-left-color: #6366f1;
+  background: #eef2ff;
+}
+
+.itemDeadline {
+  border-left-color: #f59e0b;
+  background: #fff7ed;
+}
+
+.itemBlocker {
+  border-left-color: #fb7185;
+  background: #fff1f2;
+}
+
+.itemScheduled {
+  border-left-color: #38bdf8;
+  background: #e0f2fe;
+}
+
+.itemTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0;
+}
+
+.itemDetail {
+  font-size: 12px;
+  color: #667085;
+  margin: 4px 0 0;
+}
+
+.itemMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.badge {
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.badgeDefault {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.badgeFollowUp {
+  background: #e0e7ff;
+  color: #4338ca;
+}
+
+.badgeDeadline {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.badgeBlocker {
+  background: #ffe4e6;
+  color: #be123c;
+}
+
+.badgeScheduled {
+  background: #e0f2fe;
+  color: #0369a1;
+}

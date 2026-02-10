@@ -1,17 +1,18 @@
 import type { FollowUpSuggestion } from "@/lib/communications/followups";
+import styles from "./NotificationPanel.module.css";
 
 const badgeStyles: Record<string, string> = {
-  follow_up: "bg-indigo-50 text-indigo-700",
-  deadline: "bg-amber-50 text-amber-700",
-  blocker: "bg-rose-50 text-rose-700",
-  scheduled: "bg-sky-50 text-sky-700",
+  follow_up: styles.badgeFollowUp,
+  deadline: styles.badgeDeadline,
+  blocker: styles.badgeBlocker,
+  scheduled: styles.badgeScheduled,
 };
 
 const accentStyles: Record<string, string> = {
-  follow_up: "border-l-indigo-400 bg-indigo-50/40",
-  deadline: "border-l-amber-400 bg-amber-50/40",
-  blocker: "border-l-rose-400 bg-rose-50/40",
-  scheduled: "border-l-sky-400 bg-sky-50/40",
+  follow_up: styles.itemFollowUp,
+  deadline: styles.itemDeadline,
+  blocker: styles.itemBlocker,
+  scheduled: styles.itemScheduled,
 };
 
 export default function NotificationPanel({ suggestions }: { suggestions: FollowUpSuggestion[] }) {
@@ -20,32 +21,28 @@ export default function NotificationPanel({ suggestions }: { suggestions: Follow
   }
 
   return (
-    <div
-      data-motion="panel"
-      className="rounded-3xl border border-slate-200/80 bg-white/90 p-6 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur"
-    >
-      <div className="flex items-center justify-between">
+    <div data-motion="panel" className={styles.panel}>
+      <div className={styles.panelHeader}>
         <div>
-          <p className="text-[11px] uppercase tracking-[0.35em] text-slate-400">Signals</p>
-          <p className="text-base font-semibold text-slate-900">Needs attention</p>
+          <p className={styles.panelKicker}>Signals</p>
+          <p className={styles.panelTitle}>Needs attention</p>
         </div>
-        <span className="text-xs text-slate-400">{suggestions.length} items</span>
+        <span className={styles.panelCount}>{suggestions.length} items</span>
       </div>
 
-      <div className="mt-5 space-y-3">
+      <div className={styles.panelList}>
         {suggestions.map((item) => (
           <div
             key={item.id}
-            className={`flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/70 border-l-4 p-4 ${
-              accentStyles[item.type] ?? "border-l-slate-300 bg-white"
-            }`}
+            data-signal-pulse={item.type === "blocker" || item.type === "deadline" ? "true" : "false"}
+            className={`${styles.panelItem} ${accentStyles[item.type] ?? styles.itemDefault}`}
           >
             <div>
-              <p className="text-sm font-semibold text-slate-900">{item.title}</p>
-              <p className="text-xs text-slate-500">{item.detail}</p>
+              <p className={styles.itemTitle}>{item.title}</p>
+              <p className={styles.itemDetail}>{item.detail}</p>
             </div>
-            <div className="flex items-center gap-2 text-xs">
-              <span className={`rounded-full px-2 py-1 ${badgeStyles[item.type] ?? "bg-slate-100 text-slate-600"}`}>
+            <div className={styles.itemMeta}>
+              <span className={`${styles.badge} ${badgeStyles[item.type] ?? styles.badgeDefault}`}>
                 {item.dueLabel}
               </span>
             </div>

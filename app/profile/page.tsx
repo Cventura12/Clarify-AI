@@ -1,8 +1,12 @@
 import ProfileForm from "@/components/ProfileForm";
 import { getProfile } from "@/lib/profile";
+import { authOptions } from "@/lib/auth";
+import { getServerSession } from "next-auth";
 
 export default async function ProfilePage() {
-  const profile = await getProfile();
+  const session = await getServerSession(authOptions);
+  const userId = session?.user?.id ?? null;
+  const profile = await getProfile(userId);
 
   return (
     <div className="space-y-6">

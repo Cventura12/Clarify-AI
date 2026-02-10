@@ -1,3 +1,5 @@
+import styles from "./RunStatsCard.module.css";
+
 type RunStatsCardProps = {
   totalRuns: number;
   executedSteps: number;
@@ -14,35 +16,32 @@ export default function RunStatsCard({
   lastRunAt,
 }: RunStatsCardProps) {
   return (
-    <div
-      data-motion="panel"
-      className="rounded-3xl border border-slate-200/80 bg-white/90 p-6 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur"
-    >
-      <div className="flex items-center justify-between">
+    <div data-motion="panel" className={styles.card}>
+      <div className={styles.header}>
         <div>
-          <p className="text-[11px] uppercase tracking-[0.35em] text-slate-400">Execution</p>
-          <p className="text-base font-semibold text-slate-900">Run stats</p>
-          <p className="text-xs text-slate-400">Last 7 days</p>
+          <p className={styles.kicker}>Execution</p>
+          <p className={styles.title}>Run stats</p>
+          <p className={styles.subtitle}>Last 7 days</p>
         </div>
-        <span className="text-xs text-slate-400">{totalRuns} runs</span>
+        <span className={styles.count}>{totalRuns} runs</span>
       </div>
 
-      <div className="mt-4 grid gap-3 text-sm text-slate-600">
-        <div className="flex items-center justify-between">
+      <div className={styles.metrics}>
+        <div className={styles.metricRow}>
           <span>Executed steps</span>
-          <span className="font-semibold text-slate-900">{executedSteps}</span>
+          <span className={styles.metricValue}>{executedSteps}</span>
         </div>
-        <div className="flex items-center justify-between">
+        <div className={styles.metricRow}>
           <span>Skipped (unauthorized)</span>
-          <span className="font-semibold text-slate-900">{skippedUnauthorized}</span>
+          <span className={styles.metricValue}>{skippedUnauthorized}</span>
         </div>
-        <div className="flex items-center justify-between">
+        <div className={styles.metricRow}>
           <span>Skipped (dependencies)</span>
-          <span className="font-semibold text-slate-900">{skippedDependencies}</span>
+          <span className={styles.metricValue}>{skippedDependencies}</span>
         </div>
       </div>
 
-      <div className="mt-4 text-xs text-slate-400">
+      <div className={styles.footer}>
         {lastRunAt ? `Last run ${lastRunAt.toLocaleString()}` : "No runs yet"}
       </div>
     </div>
