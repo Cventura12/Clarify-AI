@@ -18,7 +18,7 @@ Think of it as a chief of staff for life admin: follow-up emails, scholarship de
 ## Tech Stack
 - Frontend: Next.js 14 (App Router), React, Tailwind CSS
 - Backend: Next.js API Routes, Prisma ORM, PostgreSQL
-- AI: Claude API (interpret, plan, execute prompts), prompt chaining
+- AI: OpenAI API (interpret, plan, execute prompts), prompt chaining
 - Auth: Supabase Auth
 - Infra: Vercel, Supabase, Cloudflare R2 (file storage)
 - Integrations: Google Calendar, Resend (email), webhooks
@@ -29,25 +29,25 @@ Think of it as a chief of staff for life admin: follow-up emails, scholarship de
 Goals
 - Initialize Next.js 14 project with App Router
 - Set up PostgreSQL + Prisma schema (users, tasks, obligations, pipelines)
-- Configure authentication (Supabase Auth or NextAuth)
+- No auth in Week 1 (Supabase Auth begins Week 6)
 - Build base layout: sidebar, main content, command bar shell
 
 Deliverables
 - Deployed repo on Vercel with CI/CD
 - Database schema migrated and seeded
-- Auth flow working (signup/login/logout)
+- Auth deferred to Week 6 (Supabase Auth)
 - Base UI layout responsive on desktop
 
 ### Week 2 | Input Layer - Interpret Pipeline | Foundation
 Goals
 - Build natural language input interface (command bar + chat)
-- Integrate Claude API for intent parsing
+- Integrate OpenAI API for intent parsing
 - Create the Interpret module: parse user input into structured task objects
 - Handle ambiguity detection and clarification prompts
 
 Deliverables
 - User can type natural language requests
-- Claude parses input into task schema (type, urgency, context, steps)
+- OpenAI parses input into task schema (type, urgency, context, steps)
 - Clarification flow when input is ambiguous
 - Input history stored in database
 

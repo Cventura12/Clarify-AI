@@ -1,20 +1,16 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  darkMode: "class",
-  content: ["./src/**/*.{js,ts,jsx,tsx,mdx}"],
+  content: ["./app/**/*.{ts,tsx,mdx}", "./components/**/*.{ts,tsx,mdx}"],
   theme: {
     extend: {
-      colors: {
-        ink: "hsl(var(--ink) / <alpha-value>)",
-        haze: "hsl(var(--surface-soft) / <alpha-value>)",
-        ember: "hsl(var(--accent) / <alpha-value>)",
-        tide: "hsl(var(--tide) / <alpha-value>)",
-        surface: "hsl(var(--surface) / <alpha-value>)",
-        surfaceStrong: "hsl(var(--surface-strong) / <alpha-value>)",
-        surfaceSoft: "hsl(var(--surface-soft) / <alpha-value>)",
-        muted: "hsl(var(--muted) / <alpha-value>)"
-      }
-    }
+      fontFamily: {
+        body: ["var(--font-body)", "sans-serif"],
+        display: ["var(--font-display)", "serif"],
+      },
+      boxShadow: {
+        soft: "0 18px 40px rgba(15, 23, 42, 0.08)",
+      },
+    },
   },
-  plugins: []
+  plugins: [],
 };
