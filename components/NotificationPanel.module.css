@@ -128,3 +128,35 @@
   background: #e0f2fe;
   color: #0369a1;
 }
+
+@media (max-width: 640px) {
+  .panel {
+    padding: 18px;
+    border-radius: 22px;
+  }
+
+  .panelHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .panelItem {
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 640px) {
+  .panel {
+    padding: 18px;
+    border-radius: 22px;
+  }
+
+  .panelHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .panelItem {
+    align-items: flex-start;
+  }
+}

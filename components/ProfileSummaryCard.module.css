@@ -81,3 +81,19 @@
 .button:hover {
   border-color: #cbd5f5;
 }
+
+@media (max-width: 640px) {
+  .card {
+    padding: 18px;
+    border-radius: 22px;
+  }
+
+  .actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .button {
+    text-align: center;
+  }
+}
