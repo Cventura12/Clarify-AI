@@ -1,11 +1,12 @@
 import { prisma } from "@/lib/db";
 import type { ContextNode, UserPreference, UserProfile } from "@prisma/client";
+import type { JsonValue } from "@prisma/client/runtime/library";
 
 type CreateNodeInput = {
   userId: string;
   label: string;
   type: string;
-  metadata?: Record<string, unknown>;
+  metadata?: Record<string, JsonValue>;
 };
 
 const normalize = (value: string) => value.trim().toLowerCase();
@@ -22,7 +23,7 @@ export const getOrCreateNode = async ({ userId, label, type, metadata }: CreateN
   if (existing) {
     return prisma.contextNode.update({
       where: { id: existing.id },
-      data: { metadata: metadata ?? existing.metadata },
+      data: { metadata: (metadata ?? existing.metadata) as JsonValue },
     });
   }
 
@@ -31,7 +32,7 @@ export const getOrCreateNode = async ({ userId, label, type, metadata }: CreateN
       userId,
       label,
       type,
-      metadata,
+      metadata: metadata as JsonValue | undefined,
     },
   });
 };
@@ -66,7 +67,12 @@ export const syncProfileToContext = async (userId: string, profile: UserProfile 
   const userLabel = profile.fullName?.trim() || "User";
   const userNode = await getOrCreateNode({ userId, label: userLabel, type: "person" });
 
-  const attach = async (label?: string | null, type?: string, relation?: string, metadata?: Record<string, unknown>) => {
+  const attach = async (
+    label?: string | null,
+    type?: string,
+    relation?: string,
+    metadata?: Record<string, JsonValue>
+  ) => {
     if (!label || !type || !relation) return;
     const node = await getOrCreateNode({ userId, label, type, metadata });
     await linkNodes(userId, userNode, node, relation);
