@@ -76,7 +76,6 @@ export default function IntegrationCard({
         setMessage(data?.error?.message ?? "Failed to disconnect");
         return;
       }
-      setAccessToken("");
       setCalendarId("");
       setMessage("Disconnected");
     });
