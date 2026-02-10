@@ -204,7 +204,10 @@ export default async function DashboardPage() {
       const subject = typeof detail.subject === "string" ? detail.subject : undefined;
       return { id: log.id, followUpAt, subject };
     })
-    .filter((item): item is { id: string; followUpAt: string; subject?: string } => Boolean(item));
+    .filter(
+      (item): item is { id: string; followUpAt: string; subject: string | undefined } =>
+        item !== null
+    );
 
   const suggestions = [
     ...getScheduledFollowUps(scheduledItems),
