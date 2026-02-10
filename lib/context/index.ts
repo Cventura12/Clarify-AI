@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import type { ContextNode, UserPreference, UserProfile } from "@prisma/client";
+import type { ContextNode, Prisma, UserPreference, UserProfile } from "@prisma/client";
 import type { JsonValue } from "@prisma/client/runtime/library";
 
 type CreateNodeInput = {
@@ -7,6 +7,13 @@ type CreateNodeInput = {
   label: string;
   type: string;
   metadata?: Record<string, JsonValue>;
+};
+
+const toJsonInput = (
+  value: Record<string, JsonValue> | JsonValue | null | undefined
+): Prisma.InputJsonValue | undefined => {
+  if (value === null || value === undefined) return undefined;
+  return value as Prisma.InputJsonValue;
 };
 
 const normalize = (value: string) => value.trim().toLowerCase();
@@ -23,7 +30,7 @@ export const getOrCreateNode = async ({ userId, label, type, metadata }: CreateN
   if (existing) {
     return prisma.contextNode.update({
       where: { id: existing.id },
-      data: { metadata: (metadata ?? existing.metadata) as JsonValue },
+      data: { metadata: toJsonInput(metadata ?? existing.metadata) },
     });
   }
 
@@ -32,7 +39,7 @@ export const getOrCreateNode = async ({ userId, label, type, metadata }: CreateN
       userId,
       label,
       type,
-      metadata: metadata as JsonValue | undefined,
+      metadata: toJsonInput(metadata),
     },
   });
 };
