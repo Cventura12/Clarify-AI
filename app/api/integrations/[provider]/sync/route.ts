@@ -1,5 +1,11 @@
 import { prisma } from "@/lib/db";
-import { buildEventsFromTasks, pushEventsToGoogle, refreshGoogleToken, testGoogleCalendarConnection } from "@/lib/integrations/google";
+import {
+  buildEventsFromTasks,
+  pushEventsToGoogle,
+  refreshGoogleToken,
+  testGoogleCalendarConnection,
+  type CalendarEventInput,
+} from "@/lib/integrations/google";
 import { authOptions } from "@/lib/auth";
 import { getServerSession } from "next-auth";
 
@@ -103,7 +109,11 @@ export async function POST(
       orderBy: { createdAt: "desc" },
     });
     const events = buildEventsFromTasks(tasks);
-    let result = { dryRun: true, events };
+    type CreatedEvent = { id?: string; status: string; summary: string };
+    type SyncResult =
+      | { dryRun: true; events: CalendarEventInput[] }
+      | { dryRun: false; events: CreatedEvent[] };
+    let result: SyncResult = { dryRun: true, events };
 
     if (!dryRun) {
       const created = await pushEventsToGoogle({ accessToken, calendarId }, events);
