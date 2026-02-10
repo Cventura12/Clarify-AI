@@ -44,10 +44,9 @@ export default async function SettingsPage() {
   }
 
   const workspaceCount =
-    (await prisma.draft.count({ where: { userId } })) +
-    (await prisma.document.count({ where: { userId } })) +
-    (await prisma.file.count({ where: { userId } })) +
-    (await prisma.deadline.count({ where: { userId } })) +
+    (await prisma.fileArtifact.count({
+      where: { step: { plan: { task: { request: { userId } } } } },
+    })) +
     (await prisma.jobApplication.count({ where: { userId } }));
 
   const intelligenceCount =
