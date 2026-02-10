@@ -8,11 +8,15 @@ export async function POST(
     const provider = params.provider;
     const payload = await request.json().catch(() => null);
 
-    const integration = await prisma.integration.upsert({
-      where: { provider },
-      update: {},
-      create: { provider, status: "connected" },
+    let integration = await prisma.integration.findFirst({
+      where: { provider, userId: null },
     });
+
+    if (!integration) {
+      integration = await prisma.integration.create({
+        data: { provider, status: "connected", userId: null },
+      });
+    }
 
     const event = await prisma.integrationEvent.create({
       data: {
