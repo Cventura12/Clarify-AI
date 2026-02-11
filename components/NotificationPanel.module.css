@@ -1,9 +1,9 @@
 .panel {
-  border-radius: 28px;
-  border: 1px solid var(--border);
-  background: linear-gradient(180deg, var(--surface) 0%, var(--surface-soft) 100%);
-  padding: 24px;
-  box-shadow: var(--shadow);
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, rgba(21, 24, 30, 0.98), rgba(16, 19, 25, 0.98));
+  padding: 18px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
 }
 
 .panelHeader {
@@ -17,20 +17,20 @@
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.35em;
-  color: var(--kicker);
+  color: #9aa3ad;
   margin: 0;
 }
 
 .panelTitle {
   font-size: 16px;
   font-weight: 600;
-  color: var(--text);
+  color: #e5e7eb;
   margin: 0;
 }
 
 .panelCount {
   font-size: 12px;
-  color: var(--kicker);
+  color: #9aa3ad;
 }
 
 .panelList {
@@ -46,24 +46,24 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  border-radius: 20px;
-  border: 1px solid var(--border);
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-left-width: 4px;
-  padding: 16px;
+  padding: 14px;
 }
 
 .itemDefault {
-  border-left-color: var(--accent);
-  background: var(--surface);
+  border-left-color: #2dd4bf;
+  background: rgba(17, 19, 25, 0.9);
 }
 
 .itemFollowUp {
-  border-left-color: var(--accent);
-  background: rgba(79, 70, 229, 0.12);
+  border-left-color: #2dd4bf;
+  background: rgba(45, 212, 191, 0.12);
 }
 
 .itemDeadline {
-  border-left-color: var(--accent-warm);
+  border-left-color: #f59e0b;
   background: rgba(245, 158, 11, 0.12);
 }
 
@@ -73,20 +73,20 @@
 }
 
 .itemScheduled {
-  border-left-color: var(--accent-2);
-  background: rgba(45, 212, 191, 0.12);
+  border-left-color: #22d3ee;
+  background: rgba(34, 211, 238, 0.12);
 }
 
 .itemTitle {
   font-size: 14px;
   font-weight: 600;
-  color: var(--text);
+  color: #e5e7eb;
   margin: 0;
 }
 
 .itemDetail {
   font-size: 12px;
-  color: var(--muted);
+  color: #9aa3ad;
   margin: 4px 0 0;
 }
 
@@ -105,28 +105,28 @@
 }
 
 .badgeDefault {
-  background: var(--surface-alt);
-  color: var(--muted);
+  background: rgba(148, 163, 184, 0.2);
+  color: #cbd5f5;
 }
 
 .badgeFollowUp {
-  background: rgba(79, 70, 229, 0.16);
-  color: var(--accent);
+  background: rgba(45, 212, 191, 0.2);
+  color: #5eead4;
 }
 
 .badgeDeadline {
   background: rgba(245, 158, 11, 0.2);
-  color: #f59e0b;
+  color: #fbbf24;
 }
 
 .badgeBlocker {
   background: rgba(251, 113, 133, 0.2);
-  color: #fb7185;
+  color: #fda4af;
 }
 
 .badgeScheduled {
-  background: rgba(45, 212, 191, 0.2);
-  color: #2dd4bf;
+  background: rgba(34, 211, 238, 0.2);
+  color: #67e8f9;
 }
 
 @media (max-width: 640px) {

@@ -245,6 +245,14 @@ export default function Sidebar() {
           <p className="mt-1 font-medium text-white/80">Ready to interpret requests.</p>
         </div>
 
+        <button
+          type="button"
+          className="mx-4 mt-3 flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300"
+        >
+          <span className="h-2 w-2 rounded-full bg-emerald-400" />
+          Agent ready
+        </button>
+
         <nav ref={navRef} className="flex flex-col gap-1 px-4 py-6 text-sm">
           {items.map((item) => (
             <Link
@@ -267,7 +275,14 @@ export default function Sidebar() {
           <ThemeToggle />
         </div>
 
-        <div className="mt-auto border-t border-white/10 p-4" />
+        <div className="mt-auto border-t border-white/10 p-4">
+          <p className="text-[10px] uppercase tracking-[0.3em] text-white/40">Connected</p>
+          <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-emerald-300">
+            <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-1">Gmail</span>
+            <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-1">Calendar</span>
+            <span className="rounded-full border border-white/15 bg-white/10 px-2 py-1 text-white/60">Notion</span>
+          </div>
+        </div>
       </aside>
     </>
   );

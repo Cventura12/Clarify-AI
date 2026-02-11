@@ -1,9 +1,9 @@
 .panel {
-  border-radius: 28px;
-  border: 1px solid var(--border);
-  background: linear-gradient(180deg, var(--surface) 0%, var(--surface-soft) 100%);
-  padding: 24px;
-  box-shadow: var(--shadow);
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, rgba(21, 24, 30, 0.98), rgba(16, 19, 25, 0.98));
+  padding: 18px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
 }
 
 .header {
@@ -17,20 +17,20 @@
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.35em;
-  color: var(--kicker);
+  color: #9aa3ad;
   margin: 0;
 }
 
 .title {
   font-size: 16px;
   font-weight: 600;
-  color: var(--text);
+  color: #e5e7eb;
   margin: 0;
 }
 
 .count {
   font-size: 12px;
-  color: var(--kicker);
+  color: #9aa3ad;
 }
 
 .list {
@@ -42,22 +42,22 @@
 
 .item {
   border-radius: 20px;
-  border: 1px solid var(--border);
-  background: var(--surface-alt);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(17, 19, 25, 0.9);
   padding: 16px;
 }
 
 .itemTitle {
   font-size: 14px;
   font-weight: 600;
-  color: var(--text);
+  color: #e5e7eb;
   margin: 0;
 }
 
 .itemDetail {
   margin-top: 4px;
   font-size: 12px;
-  color: var(--muted);
+  color: #9aa3ad;
 }
 
 @media (max-width: 640px) {

@@ -14,15 +14,14 @@ import type { Task } from "@prisma/client";
 import type { JsonValue } from "@prisma/client/runtime/library";
 import { getServerSession } from "next-auth";
 
-type CardItem = {
+type ThreadItem = {
   id: string;
   title: string;
-  urgency: string;
-  meta: string;
-  statusText: string;
-  statusKind: "clock" | "check" | "alert";
-  requestId?: string;
+  summary: string;
+  urgency: "critical" | "high" | "medium" | "low";
+  deadline: string;
   taskStatus: string;
+  requestId?: string;
 };
 
 const asArray = <T,>(value: JsonValue): T[] => (Array.isArray(value) ? (value as T[]) : []);
@@ -36,108 +35,75 @@ const formatDeadline = (dates: JsonValue) => {
   const diffDays = Math.ceil((parsed.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
   if (diffDays <= 0) return "Due today";
   if (diffDays === 1) return "Due tomorrow";
-  return `${diffDays} days left`;
+  if (diffDays <= 7) return `${diffDays}d left`;
+  return parsed.toLocaleDateString();
 };
 
-const urgencyStyles: Record<string, string> = {
-  critical: styles.urgencyCritical,
-  high: styles.urgencyHigh,
-  medium: styles.urgencyMedium,
-  low: styles.urgencyLow,
+const urgencyRank: Record<ThreadItem["urgency"], number> = {
+  critical: 0,
+  high: 1,
+  medium: 2,
+  low: 3,
 };
 
-const StatusGlyph = ({ kind }: { kind: "clock" | "check" | "alert" }) => {
-  if (kind === "check") {
-    return (
-      <svg viewBox="0 0 24 24" className={styles.icon} fill="none" stroke="currentColor" strokeWidth="2">
-        <circle cx="12" cy="12" r="9" />
-        <path d="M8 12l3 3 5-5" />
-      </svg>
-    );
-  }
-  if (kind === "alert") {
-    return (
-      <svg viewBox="0 0 24 24" className={styles.icon} fill="none" stroke="currentColor" strokeWidth="2">
-        <circle cx="12" cy="12" r="9" />
-        <path d="M12 7v6" />
-        <path d="M12 16h.01" />
-      </svg>
-    );
-  }
-  return (
-    <svg viewBox="0 0 24 24" className={styles.icon} fill="none" stroke="currentColor" strokeWidth="2">
-      <circle cx="12" cy="12" r="9" />
-      <path d="M12 7v5l3 2" />
-    </svg>
-  );
-};
-
-const buildCard = (task: Task, requestId: string): CardItem => {
-  const pending =
-    typeof task.status === "object" && task.status
-      ? (task.status as { what_is_pending?: string }).what_is_pending
-      : undefined;
-  const statusText = pending ?? task.summary ?? "Awaiting next step";
+const buildThread = (task: Task, requestId: string): ThreadItem => {
   const title =
     task.title && task.title.toLowerCase() !== "clarify request details"
       ? task.title
       : task.summary ?? task.title;
-  const statusKind = task.taskStatus === "blocked" ? "alert" : task.taskStatus === "planned" ? "check" : "clock";
-
   return {
     id: task.id,
     title: title ?? "Untitled request",
-    urgency: task.urgency ?? "low",
-    meta: formatDeadline(task.dates),
-    statusText: statusText ?? task.summary,
-    statusKind,
-    requestId,
+    summary: task.summary ?? "Awaiting next step",
+    urgency: (task.urgency ?? "low") as ThreadItem["urgency"],
+    deadline: formatDeadline(task.dates),
     taskStatus: task.taskStatus,
+    requestId,
   };
 };
 
-const fallbackCards: CardItem[] = [
+const fallbackThreads: ThreadItem[] = [
   {
     id: "fallback-1",
-    title: "Scholarship Follow-up: Gates Foundation",
-    urgency: "high",
-    meta: "2 days left",
-    statusText: "Wait for response (Day 5/7)",
-    statusKind: "clock",
-    taskStatus: "interpreted",
-  },
-  {
-    id: "fallback-2",
-    title: "Job Application: Frontend Dev at Stripe",
-    urgency: "medium",
-    meta: "No deadline",
-    statusText: "Review drafted cover letter",
-    statusKind: "check",
+    title: "NYU Tandon ED2 — Verify application portal",
+    summary: "Planned follow-up",
+    urgency: "critical",
+    deadline: "3d left",
     taskStatus: "planned",
   },
   {
+    id: "fallback-2",
+    title: "Recommender follow-up — Confirm letter received",
+    summary: "Draft ready",
+    urgency: "critical",
+    deadline: "3d left",
+    taskStatus: "ready",
+  },
+  {
     id: "fallback-3",
-    title: "AP English Lit Assignment",
+    title: "AP Computer Science — Assignment submission",
+    summary: "Interpreted",
     urgency: "high",
-    meta: "Due tomorrow",
-    statusText: "Upload essay to portal",
-    statusKind: "alert",
+    deadline: "Feb 14",
+    taskStatus: "interpreted",
+  },
+  {
+    id: "fallback-4",
+    title: "FAFSA verification — Check completion status",
+    summary: "Interpreted",
+    urgency: "high",
+    deadline: "Feb 20",
+    taskStatus: "interpreted",
+  },
+  {
+    id: "fallback-5",
+    title: "UIUC vs NYU — Compare financial aid packages",
+    summary: "Blocked",
+    urgency: "medium",
+    deadline: "Feb 28",
     taskStatus: "blocked",
   },
 ];
-
-const filterCards = (cards: CardItem[], view: string) => {
-  if (view === "active") {
-    return cards.filter((card) => card.taskStatus !== "completed" && card.taskStatus !== "abandoned");
-  }
-  if (view === "blocked") {
-    return cards.filter((card) => card.taskStatus === "blocked");
-  }
-  if (view === "history") {
-    return cards.filter((card) => card.taskStatus === "completed" || card.taskStatus === "abandoned");
-  }
-  return cards;
-};
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
@@ -178,13 +144,25 @@ export default async function DashboardPage() {
     request.tasks.map((task) => ({ task, requestId: request.id }))
   );
 
-  const cards = tasks.length
-    ? tasks.map(({ task, requestId }) => buildCard(task, requestId))
-    : fallbackCards;
+  const threads = tasks.length
+    ? tasks.map(({ task, requestId }) => buildThread(task, requestId))
+    : fallbackThreads;
 
-  const filteredCards = filterCards(cards, "all");
-  const activeCount = cards.filter((card) => card.taskStatus !== "completed" && card.taskStatus !== "abandoned").length;
-  const blockedCount = cards.filter((card) => card.taskStatus === "blocked").length;
+  const activeCount = threads.filter((item) => item.taskStatus !== "completed" && item.taskStatus !== "abandoned").length;
+  const blockedCount = threads.filter((item) => item.taskStatus === "blocked").length;
+  const criticalCount = threads.filter((item) => item.urgency === "critical").length;
+  const highCount = threads.filter((item) => item.urgency === "high").length;
+
+  const sortedThreads = [...threads].sort((a, b) => {
+    if (a.taskStatus === "blocked" && b.taskStatus !== "blocked") return -1;
+    if (b.taskStatus === "blocked" && a.taskStatus !== "blocked") return 1;
+    return urgencyRank[a.urgency] - urgencyRank[b.urgency];
+  });
+
+  const attentionItems = sortedThreads.filter(
+    (item) => item.urgency === "critical" || item.urgency === "high" || item.taskStatus === "blocked"
+  ).slice(0, 2);
+  const activeThreads = sortedThreads.filter((item) => !attentionItems.includes(item)).slice(0, 4);
   const scheduledLogs = await prisma.executionLog.findMany({
     where: {
       action: "Follow-up scheduled",
@@ -231,36 +209,91 @@ export default async function DashboardPage() {
     { totalRuns: 0, executedSteps: 0, skippedUnauthorized: 0, skippedDependencies: 0 }
   );
   const lastRunAt = planRuns[0]?.createdAt ?? null;
+  const greetingHour = new Date().getHours();
+  const greeting =
+    greetingHour < 12 ? "Good morning" : greetingHour < 18 ? "Good afternoon" : "Good evening";
 
   return (
     <DashboardMotion>
       <div className={styles.dashboard}>
         <div className={`${styles.orb} ${styles.orbOne}`} data-motion="orb" />
         <div className={`${styles.orb} ${styles.orbTwo}`} data-motion="orb" />
-        <section className={styles.heroGrid}>
-          <div className={styles.heroStack}>
-            <header className={styles.heroHeader}>
-              <div className={styles.heroLabel} data-motion="hero-kicker">
-                <span className={styles.gradientLine} />
-                <p className={styles.heroKicker}>Command center</p>
-              </div>
-              <h1 className={styles.heroTitle} data-motion="hero-title">Good morning, Caleb.</h1>
-              <div className={styles.pillRow} data-motion="hero-pills">
-                <span className={styles.pill}>
-                  {activeCount || 3} active threads
-                </span>
-                <span className={styles.pill}>
-                  {blockedCount || 1} blocked item
-                </span>
-              </div>
-            </header>
+        <section className={styles.headerRow}>
+          <div className={styles.greetingBlock}>
+            <p className={styles.greetingKicker}>Execution layer</p>
+            <h1 className={styles.greetingTitle}>
+              {greeting}, Caleb
+            </h1>
+            <div className={styles.statPills}>
+              <span className={`${styles.statPill} ${styles.statCritical}`}>{criticalCount} critical</span>
+              <span className={`${styles.statPill} ${styles.statHigh}`}>{highCount} high</span>
+              <span className={`${styles.statPill} ${styles.statBlocked}`}>{blockedCount} blocked</span>
+              <span className={`${styles.statPill} ${styles.statActive}`}>{activeCount} active</span>
+            </div>
+          </div>
+        </section>
 
-            <div data-motion="hero-command">
-              <CommandBar />
+        <section className={styles.commandRow}>
+          <CommandBar />
+        </section>
+
+        <section className={styles.mainGrid}>
+          <div className={styles.leftColumn}>
+            <div className={styles.sectionHeaderRow}>
+              <p className={styles.sectionLabel}>Needs attention now</p>
+              <Link className={styles.sectionLink} href="/requests">View all</Link>
+            </div>
+            <div className={styles.threadList}>
+              {attentionItems.map((item) => (
+                <Link
+                  key={item.id}
+                  href={item.requestId ? `/request/${item.requestId}` : "/requests"}
+                  className={`${styles.threadItem} ${styles[`thread${item.urgency}`]}`}
+                >
+                  <div className={styles.threadContent}>
+                    <p className={styles.threadTitle}>{item.title}</p>
+                    <p className={styles.threadMeta}>
+                      <span className={styles.threadStatus}>{item.taskStatus}</span>
+                      <span className={styles.threadDot}>•</span>
+                      <span className={styles.threadSummary}>{item.summary}</span>
+                    </p>
+                  </div>
+                  <div className={styles.threadBadges}>
+                    <span className={styles.deadlineBadge}>{item.deadline}</span>
+                    <span className={`${styles.urgencyBadge} ${styles[`badge${item.urgency}`]}`}>{item.urgency}</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+
+            <div className={styles.sectionHeaderRow}>
+              <p className={styles.sectionLabel}>Active threads</p>
+            </div>
+            <div className={styles.threadList}>
+              {activeThreads.map((item) => (
+                <Link
+                  key={item.id}
+                  href={item.requestId ? `/request/${item.requestId}` : "/requests"}
+                  className={`${styles.threadItem} ${styles[`thread${item.urgency}`]}`}
+                >
+                  <div className={styles.threadContent}>
+                    <p className={styles.threadTitle}>{item.title}</p>
+                    <p className={styles.threadMeta}>
+                      <span className={styles.threadStatus}>{item.taskStatus}</span>
+                      <span className={styles.threadDot}>•</span>
+                      <span className={styles.threadSummary}>{item.summary}</span>
+                    </p>
+                  </div>
+                  <div className={styles.threadBadges}>
+                    <span className={styles.deadlineBadge}>{item.deadline}</span>
+                    <span className={`${styles.urgencyBadge} ${styles[`badge${item.urgency}`]}`}>{item.urgency}</span>
+                  </div>
+                </Link>
+              ))}
             </div>
           </div>
 
-          <div className={styles.heroSide}>
+          <div className={styles.rightColumn}>
             <NotificationPanel suggestions={suggestions} />
             <RunStatsCard
               totalRuns={runStats.totalRuns}
@@ -269,76 +302,8 @@ export default async function DashboardPage() {
               skippedDependencies={runStats.skippedDependencies}
               lastRunAt={lastRunAt}
             />
-          </div>
-        </section>
-
-        <section className={styles.secondaryGrid}>
-          <ProfileSummaryCard profile={profile} />
-          <InsightsPanel insights={insights} />
-        </section>
-
-        <section className={styles.threadSection}>
-          <div className={styles.sectionHeader}>
-            <div className={styles.sectionTitle}>
-              <div className={styles.sectionLabel}>
-                <span className={styles.gradientLineWarm} />
-                <p className={styles.sectionKicker}>Threads</p>
-              </div>
-              <p className={styles.sectionHeadline}>Active requests</p>
-            </div>
-            <Link
-              href="/requests"
-              className={styles.sectionLink}
-            >
-              View all
-            </Link>
-          </div>
-
-          <div className={styles.cardsGrid}>
-            {filteredCards.map((card) => (
-              <div
-                key={card.id}
-                data-motion="card"
-                className={styles.taskCard}
-              >
-                <div className={styles.cardMeta}>
-                  <span
-                    className={`${styles.urgencyBadge} ${urgencyStyles[card.urgency] ?? styles.urgencyMedium}`}
-                  >
-                    {card.urgency}
-                  </span>
-                  <span className={styles.cardMetaText}>{card.meta}</span>
-                </div>
-                <h3 className={styles.cardTitle}>{card.title}</h3>
-                <div className={styles.cardStatus}>
-                  <span
-                    className={`${styles.statusIcon} ${
-                      card.statusKind === "alert"
-                        ? styles.statusAlert
-                        : card.statusKind === "check"
-                        ? styles.statusCheck
-                        : styles.statusClock
-                    }`}
-                  >
-                    <StatusGlyph kind={card.statusKind} />
-                  </span>
-                  <span className={styles.cardStatusText}>{card.statusText}</span>
-                </div>
-                <div className={styles.cardFooter}>
-                  {card.requestId ? (
-                    <Link className={styles.cardLink} href={`/request/${card.requestId}`}>
-                      View details
-                      <svg viewBox="0 0 24 24" className={styles.cardLinkIcon} fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M7 17L17 7" />
-                        <path d="M9 7h8v8" />
-                      </svg>
-                    </Link>
-                  ) : (
-                    <span className={styles.cardLink}>View details</span>
-                  )}
-                </div>
-              </div>
-            ))}
+            <ProfileSummaryCard profile={profile} />
+            <InsightsPanel insights={insights} />
           </div>
         </section>
       </div>

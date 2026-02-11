@@ -78,32 +78,24 @@ export default function CommandBar() {
 
   return (
     <form ref={formRef} onSubmit={handleSubmit} className={styles.command}>
-      <div className={styles.commandMeta}>
-        <span>Command input</span>
-        <span className={styles.commandStatus}>
-          <span className={styles.commandDot} />
-          Agent ready
+      <div className={styles.commandInputRow}>
+        <span className={styles.commandSpark}>
+          <svg viewBox="0 0 24 24" className={styles.commandSparkIcon} fill="none" stroke="currentColor" strokeWidth="1.6">
+            <path d="M12 3l2.2 5.2L19.5 10l-5.3 1.9L12 17l-2.2-5.1L4.5 10l5.3-1.8L12 3z" />
+          </svg>
         </span>
+        <textarea
+          ref={inputRef}
+          className={styles.commandInput}
+          placeholder="What do you need to get done?"
+          value={input}
+          rows={1}
+          onChange={(event) => setInput(event.target.value)}
+        />
       </div>
 
-      <textarea
-        ref={inputRef}
-        className={styles.commandInput}
-        placeholder="What do you need to get done?"
-        value={input}
-        onChange={(event) => setInput(event.target.value)}
-      />
-
-      <div className={styles.commandFooter}>
-        <div className={styles.commandHint}>
-          <span className={styles.commandHintIcon}>
-            <svg viewBox="0 0 24 24" className={styles.commandHintSvg} fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M12 3l2.2 5.2L19.5 10l-5.3 1.9L12 17l-2.2-5.1L4.5 10l5.3-1.8L12 3z" />
-            </svg>
-          </span>
-          Interpret → Plan → Authorize
-        </div>
-
+      <div className={styles.commandActions}>
+        <span className={styles.commandFlow}>interpret → plan → authorize</span>
         <button type="submit" disabled={isPending} className={styles.commandButton}>
           {isPending ? "Clarifying" : "Clarify"}
           <svg viewBox="0 0 24 24" className={styles.commandButtonIcon} fill="none" stroke="currentColor" strokeWidth="2">
