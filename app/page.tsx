@@ -65,7 +65,7 @@ const buildThread = (task: Task, requestId: string): ThreadItem => {
 const fallbackThreads: ThreadItem[] = [
   {
     id: "fallback-1",
-    title: "NYU Tandon ED2 — Verify application portal",
+    title: "NYU Tandon ED2 - Verify application portal",
     summary: "Planned follow-up",
     urgency: "critical",
     deadline: "3d left",
@@ -73,7 +73,7 @@ const fallbackThreads: ThreadItem[] = [
   },
   {
     id: "fallback-2",
-    title: "Recommender follow-up — Confirm letter received",
+    title: "Recommender follow-up - Confirm letter received",
     summary: "Draft ready",
     urgency: "critical",
     deadline: "3d left",
@@ -81,7 +81,7 @@ const fallbackThreads: ThreadItem[] = [
   },
   {
     id: "fallback-3",
-    title: "AP Computer Science — Assignment submission",
+    title: "AP Computer Science - Assignment submission",
     summary: "Interpreted",
     urgency: "high",
     deadline: "Feb 14",
@@ -89,7 +89,7 @@ const fallbackThreads: ThreadItem[] = [
   },
   {
     id: "fallback-4",
-    title: "FAFSA verification — Check completion status",
+    title: "FAFSA verification - Check completion status",
     summary: "Interpreted",
     urgency: "high",
     deadline: "Feb 20",
@@ -97,7 +97,7 @@ const fallbackThreads: ThreadItem[] = [
   },
   {
     id: "fallback-5",
-    title: "UIUC vs NYU — Compare financial aid packages",
+    title: "UIUC vs NYU - Compare financial aid packages",
     summary: "Blocked",
     urgency: "medium",
     deadline: "Feb 28",
@@ -239,35 +239,39 @@ export default async function DashboardPage() {
 
         <section className={styles.mainGrid}>
           <div className={styles.leftColumn}>
-            <div className={styles.sectionHeaderRow}>
-              <p className={styles.sectionLabel}>Needs attention now</p>
-              <Link className={styles.sectionLink} href="/requests">View all</Link>
-            </div>
-            <div className={styles.threadList}>
-              {attentionItems.map((item) => (
-                <Link
-                  key={item.id}
-                  href={item.requestId ? `/request/${item.requestId}` : "/requests"}
-                  className={`${styles.threadItem} ${styles[`thread${item.urgency}`]}`}
-                >
-                  <div className={styles.threadContent}>
-                    <p className={styles.threadTitle}>{item.title}</p>
-                    <p className={styles.threadMeta}>
-                      <span className={styles.threadStatus}>{item.taskStatus}</span>
-                      <span className={styles.threadDot}>•</span>
-                      <span className={styles.threadSummary}>{item.summary}</span>
-                    </p>
-                  </div>
-                  <div className={styles.threadBadges}>
-                    <span className={styles.deadlineBadge}>{item.deadline}</span>
-                    <span className={`${styles.urgencyBadge} ${styles[`badge${item.urgency}`]}`}>{item.urgency}</span>
-                  </div>
-                </Link>
-              ))}
-            </div>
+            {attentionItems.length > 0 ? (
+              <>
+                <div className={styles.sectionHeaderRow}>
+                  <p className={styles.sectionLabel}>Needs attention now</p>
+                </div>
+                <div className={styles.threadList}>
+                  {attentionItems.map((item) => (
+                    <Link
+                      key={item.id}
+                      href={item.requestId ? `/request/${item.requestId}` : "/requests"}
+                      className={`${styles.threadItem} ${styles[`thread${item.urgency}`]}`}
+                    >
+                      <div className={styles.threadContent}>
+                        <p className={styles.threadTitle}>{item.title}</p>
+                        <p className={styles.threadMeta}>
+                          <span className={styles.threadStatus}>{item.taskStatus}</span>
+                          <span className={styles.threadDot}>.</span>
+                          <span className={styles.threadSummary}>{item.summary}</span>
+                        </p>
+                      </div>
+                      <div className={styles.threadBadges}>
+                        <span className={styles.deadlineBadge}>{item.deadline}</span>
+                        <span className={`${styles.urgencyBadge} ${styles[`badge${item.urgency}`]}`}>{item.urgency}</span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </>
+            ) : null}
 
             <div className={styles.sectionHeaderRow}>
               <p className={styles.sectionLabel}>Active threads</p>
+              <Link className={styles.sectionLink} href="/requests">View all</Link>
             </div>
             <div className={styles.threadList}>
               {activeThreads.map((item) => (
@@ -280,7 +284,7 @@ export default async function DashboardPage() {
                     <p className={styles.threadTitle}>{item.title}</p>
                     <p className={styles.threadMeta}>
                       <span className={styles.threadStatus}>{item.taskStatus}</span>
-                      <span className={styles.threadDot}>•</span>
+                      <span className={styles.threadDot}>.</span>
                       <span className={styles.threadSummary}>{item.summary}</span>
                     </p>
                   </div>
@@ -294,7 +298,6 @@ export default async function DashboardPage() {
           </div>
 
           <div className={styles.rightColumn}>
-            <NotificationPanel suggestions={suggestions} />
             <RunStatsCard
               totalRuns={runStats.totalRuns}
               executedSteps={runStats.executedSteps}
@@ -303,6 +306,7 @@ export default async function DashboardPage() {
               lastRunAt={lastRunAt}
             />
             <ProfileSummaryCard profile={profile} />
+            <NotificationPanel suggestions={suggestions} />
             <InsightsPanel insights={insights} />
           </div>
         </section>
@@ -310,3 +314,5 @@ export default async function DashboardPage() {
     </DashboardMotion>
   );
 }
+
+

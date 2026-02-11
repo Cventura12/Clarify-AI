@@ -25,17 +25,17 @@
   position: absolute;
   border-radius: 999px;
   filter: blur(0px);
-  opacity: 0.4;
+  opacity: 0.22;
   pointer-events: none;
   z-index: 0;
 }
 
 .orbOne {
-  width: 220px;
-  height: 220px;
-  top: 60px;
-  right: 10%;
-  background: radial-gradient(circle at 30% 30%, rgba(45, 212, 191, 0.25), transparent 65%);
+  width: 160px;
+  height: 160px;
+  top: 120px;
+  right: 4%;
+  background: radial-gradient(circle at 30% 30%, rgba(45, 212, 191, 0.18), transparent 70%);
 }
 
 .orbTwo {
@@ -111,11 +111,11 @@
 
 .commandRow {
   display: flex;
-  justify-content: center;
+  width: 100%;
 }
 
 .commandRow > * {
-  width: min(720px, 100%);
+  width: 100%;
 }
 
 .mainGrid {
@@ -133,6 +133,7 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+  align-self: start;
 }
 
 .sectionHeaderRow {
@@ -193,7 +194,7 @@
 }
 
 .threadlow {
-  border-left: 4px solid #2dd4bf;
+  border-left: 4px solid #64748b;
 }
 
 .threadContent {
@@ -271,8 +272,8 @@
 }
 
 .badgelow {
-  background: rgba(45, 212, 191, 0.2);
-  color: #5eead4;
+  background: rgba(100, 116, 139, 0.2);
+  color: #cbd5e1;
 }
 
 @media (min-width: 1024px) {
