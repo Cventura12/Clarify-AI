@@ -230,10 +230,7 @@ export default function Sidebar() {
         >
           Menu
         </button>
-        <div className="flex items-center gap-2 text-sm font-semibold tracking-wide text-[var(--text)]">
-          <span className="h-2 w-2 rounded-full bg-emerald-500" />
-          Clarify AI
-        </div>
+        <img src="/clarify-logo.svg" alt="Clarify logo" className="h-7 w-auto" />
         <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-700">
           Ready
         </span>
@@ -253,16 +250,8 @@ export default function Sidebar() {
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="flex items-start justify-between px-6 py-6">
-          <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/20 bg-white/10">
-              <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
-            </span>
-            <div>
-              <span className="text-lg font-semibold tracking-wide">Clarify AI</span>
-              <p className="text-[10px] uppercase tracking-[0.35em] text-white/50">Execution layer</p>
-            </div>
-          </div>
+        <div className="flex items-start justify-between px-6 py-5">
+          <img src="/clarify-logo.svg" alt="Clarify logo" className="h-10 w-auto" />
           <button
             type="button"
             onClick={closeSidebar}
