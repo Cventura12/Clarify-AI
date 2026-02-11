@@ -97,11 +97,11 @@ export default function PlanView({ plan }: { plan: Plan & { steps: Step[] } }) {
   };
 
   return (
-    <div className="rounded-xl border border-[#e6e4e1] bg-[#fbfaf8] p-4">
+    <div className="rounded-xl border border-[#e6e4e1] bg-[#fbfaf8] p-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Plan</p>
-          <p className="text-sm text-slate-600">
+          <p className="text-[11px] uppercase tracking-[0.2em] text-slate-400">Plan</p>
+          <p className="text-xs text-slate-600">
             {plan.totalSteps} steps - {plan.estimatedTotalEffort}
           </p>
         </div>
@@ -109,7 +109,7 @@ export default function PlanView({ plan }: { plan: Plan & { steps: Step[] } }) {
           type="button"
           onClick={runPlan}
           disabled={isPending || !canRun}
-          className={`rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] ${
+          className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] ${
             canRun
               ? "border border-[#d8d4cf] bg-white text-slate-600 hover:border-slate-300"
               : "border border-[#e6e4e1] bg-slate-50 text-slate-400"
@@ -118,62 +118,59 @@ export default function PlanView({ plan }: { plan: Plan & { steps: Step[] } }) {
           {isPending ? "Running" : `Run ${authorizedCount} approved`}
         </button>
         {plan.deadline ? (
-          <p className="text-xs text-slate-400">
+          <p className="text-[11px] text-slate-400">
             Deadline: {new Date(plan.deadline).toLocaleDateString()}
           </p>
         ) : null}
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-        <span className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 font-medium text-sky-700">
+      <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[10px]">
+        <span className="rounded-full border border-sky-200 bg-sky-50 px-2 py-0.5 font-medium text-sky-700">
           Clarify-handled: {clarifyHandled}
         </span>
-        <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 font-medium text-slate-700">
+        <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 font-medium text-slate-700">
           Manual: {manualHandled}
         </span>
       </div>
 
       {nextAction ? (
-        <div className="mt-3 rounded-lg border border-[#ebe8e3] bg-white p-3 text-sm text-slate-600">
-          <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Next action</p>
-          <p className="mt-1">
+        <div className="mt-2 rounded-lg border border-[#ebe8e3] bg-white p-2.5 text-xs text-slate-600">
+          <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400">Next action</p>
+          <p className="mt-0.5">
             Step {nextAction.step_number}: {nextAction.action}
           </p>
-          <p className="mt-1 text-xs text-slate-400">{nextAction.why_first}</p>
+          <p className="mt-0.5 text-[11px] text-slate-400">{nextAction.why_first}</p>
         </div>
       ) : null}
 
-      {error ? <p className="mt-3 text-xs text-red-500">{error}</p> : null}
+      {error ? <p className="mt-2 text-xs text-red-500">{error}</p> : null}
 
-      <ol className="mt-4 space-y-3">
+      <ol className="mt-2.5 space-y-2">
         {plan.steps.map((step) => (
-          <li key={step.id} className="rounded-lg border border-[#ebe8e3] bg-white p-3">
+          <li key={step.id} className="rounded-lg border border-[#ebe8e3] bg-white px-2.5 py-2 min-h-[54px]">
             <div className="flex items-center justify-between gap-2">
-              <p className="text-sm font-semibold text-slate-800">
-                Step {step.stepNumber}: {step.action}
-              </p>
-              <span className="text-xs text-slate-400">{step.effort}</span>
-            </div>
-            <p className="mt-2 text-sm text-slate-500">{step.detail}</p>
-            <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
-              <div className="flex items-center gap-2">
-                <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] text-slate-600">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold text-slate-800">
+                  {step.stepNumber}. {step.action}
+                </p>
+                <p className="truncate text-xs text-slate-500">{step.detail}</p>
+              </div>
+              <div className="flex shrink-0 items-center gap-1.5 text-[10px] text-slate-400">
+                <span className="rounded-full border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[10px] text-slate-600">
                   {delegationLabel[step.delegation] ?? step.delegation}
                 </span>
                 <span
-                  className={`rounded-full px-2 py-1 ${statusTone[step.status] ?? "bg-slate-100 text-slate-600"}`}
+                  className={`rounded-full px-1.5 py-0.5 text-[10px] ${statusTone[step.status] ?? "bg-slate-100 text-slate-600"}`}
                 >
                   {step.status}
                 </span>
-              </div>
-              <div className="flex items-center gap-2">
                 {step.status === "pending" || step.status === "ready" ? (
                   <>
                     <button
                       type="button"
                       onClick={() => authorizeStep(step.id)}
                       disabled={isPending}
-                      className="rounded-full border border-[#d8d4cf] bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500"
+                      className="rounded-full border border-[#d8d4cf] bg-white px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-slate-500"
                     >
                       Approve
                     </button>
@@ -181,7 +178,7 @@ export default function PlanView({ plan }: { plan: Plan & { steps: Step[] } }) {
                       type="button"
                       onClick={() => rejectStep(step.id)}
                       disabled={isPending}
-                      className="rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-rose-700"
+                      className="rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-rose-700"
                     >
                       Reject
                     </button>
@@ -193,7 +190,7 @@ export default function PlanView({ plan }: { plan: Plan & { steps: Step[] } }) {
                       type="button"
                       onClick={() => executeStep(step.id)}
                       disabled={isPending}
-                      className="rounded-full bg-slate-900 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-white"
+                      className="rounded-full bg-slate-900 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-white"
                     >
                       Execute
                     </button>
@@ -201,14 +198,14 @@ export default function PlanView({ plan }: { plan: Plan & { steps: Step[] } }) {
                       type="button"
                       onClick={() => rejectStep(step.id)}
                       disabled={isPending}
-                      className="rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-rose-700"
+                      className="rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-rose-700"
                     >
                       Reject
                     </button>
                   </>
                 ) : null}
                 {step.status === "done" && step.outcome ? (
-                  <span className="text-xs text-slate-500">{step.outcome}</span>
+                  <span className="max-w-[220px] truncate text-[11px] text-slate-500">{step.outcome}</span>
                 ) : null}
               </div>
             </div>
@@ -217,9 +214,9 @@ export default function PlanView({ plan }: { plan: Plan & { steps: Step[] } }) {
       </ol>
 
       {riskFlags.length > 0 ? (
-        <div className="mt-4 rounded-lg border border-[#ebe8e3] bg-white p-3">
-          <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Risk flags</p>
-          <ul className="mt-2 space-y-1 text-sm text-slate-600">
+        <div className="mt-2.5 rounded-lg border border-[#ebe8e3] bg-white p-2.5">
+          <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400">Risk flags</p>
+          <ul className="mt-1.5 space-y-1 text-xs text-slate-600">
             {riskFlags.map((risk, index) => (
               <li key={`${plan.id}-risk-${index}`}>
                 {risk.risk} ({risk.severity})

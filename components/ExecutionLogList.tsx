@@ -55,30 +55,30 @@ const describeDetail = (log: ExecutionLog) => {
 export default function ExecutionLogList({ logs }: { logs: ExecutionLog[] }) {
   if (logs.length === 0) {
     return (
-      <div className="rounded-2xl border border-[#e6e4e1] bg-white p-6 text-sm text-slate-500 shadow-soft">
+      <div className="rounded-xl border border-[#e6e4e1] bg-white p-4 text-sm text-slate-500 shadow-soft">
         No execution activity yet.
       </div>
     );
   }
 
   return (
-    <div className="rounded-2xl border border-[#e6e4e1] bg-white p-6 shadow-soft">
+    <div className="rounded-xl border border-[#e6e4e1] bg-white p-4 shadow-soft">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.25em] text-slate-400">Audit trail</p>
-          <p className="text-lg font-semibold text-slate-900">Execution log</p>
+          <p className="text-[11px] uppercase tracking-[0.25em] text-slate-400">Audit trail</p>
+          <p className="text-sm font-semibold text-slate-900">Execution log</p>
         </div>
         <span className="text-xs text-slate-400">{logs.length} entries</span>
       </div>
 
-      <div className="mt-4 divide-y divide-[#ece9e5]">
+      <div className="mt-2.5 divide-y divide-[#ece9e5]">
         {logs.map((log) => (
-          <div key={log.id} className="flex flex-wrap items-center justify-between gap-4 py-4 text-sm">
+          <div key={log.id} className="flex flex-wrap items-center justify-between gap-3 py-2.5 text-sm">
             <div>
-              <p className="font-semibold text-slate-900">{log.action}</p>
-              <p className="text-xs text-slate-400">{log.createdAt.toLocaleString()}</p>
+              <p className="text-sm font-semibold text-slate-900">{log.action}</p>
+              <p className="text-[11px] text-slate-400">{log.createdAt.toLocaleString()}</p>
               {describeDetail(log) ? (
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-0.5 text-xs text-slate-500">
                   {describeDetail(log)}
                 </p>
               ) : null}

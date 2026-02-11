@@ -93,25 +93,25 @@ export default async function RequestDetailPage({
   }));
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <header className="space-y-2">
-        <p className="text-xs uppercase tracking-[0.25em] text-slate-400">
+        <p className="text-[11px] uppercase tracking-[0.25em] text-slate-400">
           Request Detail
         </p>
-        <h1 className="font-display text-2xl text-slate-900">Request overview</h1>
-        <blockquote className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-base leading-relaxed text-slate-600">
+        <h1 className="font-display text-xl text-slate-900">Request overview</h1>
+        <blockquote className="rounded-xl border border-slate-200/80 border-l-2 border-l-slate-400 bg-slate-50/70 px-3 py-2 text-base leading-relaxed text-slate-600">
           {request.rawInput}
         </blockquote>
-        <p className="text-sm text-slate-500">
+        <p className="text-xs text-slate-500">
           Created {request.createdAt.toLocaleString()}
         </p>
       </header>
 
-      <div className="space-y-6">
+      <div className="space-y-4">
         {tasksWithInterpretation.map(({ task, interpretation }) => (
-          <div key={task.id} className="space-y-3">
+          <div key={task.id} className="space-y-2">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <p className="text-xs uppercase tracking-[0.25em] text-slate-400">Task</p>
+              <p className="text-[11px] uppercase tracking-[0.25em] text-slate-400">Task</p>
               <PlanTrigger taskId={task.id} hasPlan={Boolean(task.plan)} />
             </div>
             <TaskEditor taskId={task.id} initialTask={interpretation} />

@@ -14,7 +14,7 @@ export default function StatusBadge({
   };
 
   return (
-    <span className={`rounded-full px-2 py-1 text-[11px] uppercase tracking-[0.2em] ${styles[tone] ?? styles.neutral}`}>
+    <span className={`rounded-full px-1.5 py-0.5 text-[10px] uppercase tracking-[0.18em] ${styles[tone] ?? styles.neutral}`}>
       {label}
     </span>
   );

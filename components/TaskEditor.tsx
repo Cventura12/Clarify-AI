@@ -52,16 +52,16 @@ export default function TaskEditor({
   };
 
   return (
-    <div className="rounded-2xl border border-[#e6e4e1] bg-white p-4 shadow-soft">
+    <div className="rounded-xl border border-[#e6e4e1] bg-white p-3 shadow-soft">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Interpretation</p>
-          <p className="text-sm text-slate-500">Edit the JSON before generating a plan.</p>
+          <p className="text-[11px] uppercase tracking-[0.2em] text-slate-400">Interpretation</p>
+          <p className="text-xs text-slate-500">Edit the JSON before generating a plan.</p>
         </div>
         <button
           type="button"
           onClick={() => setIsOpen((prev) => !prev)}
-          className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500"
+          className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500"
         >
           {isOpen ? "Hide" : "Edit"}
         </button>
