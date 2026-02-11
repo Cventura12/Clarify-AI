@@ -267,17 +267,21 @@ export default async function DashboardPage({
                       data-motion="card"
                       className={styles.requestCard}
                     >
-                      <div className={styles.requestCardHeader}>
-                        <span className={`${styles.requestUrgency} ${styles[`requestUrgency${item.urgency}`]}`}>
-                          {item.urgency}
-                        </span>
-                        <span className={styles.requestDeadline}>{item.deadline}</span>
-                      </div>
-                      <p className={styles.requestCardTitle}>{item.title}</p>
-                      <p className={styles.requestCardSummary}>{item.summary}</p>
-                      <div className={styles.requestCardFooter}>
-                        <span className={styles.requestStatus}>{item.taskStatus}</span>
-                        <span className={styles.requestDetailLink}>View details</span>
+                      <div className={styles.requestCardBody}>
+                        <div className={styles.requestCardMain}>
+                          <p className={styles.requestCardTitle}>{item.title}</p>
+                          <p className={styles.requestMetaLine}>
+                            <span className={styles.requestStatus}>{item.taskStatus}</span>
+                            <span className={styles.requestDot}>•</span>
+                            <span className={styles.requestMetaText}>{item.summary || "Awaiting next step"}</span>
+                          </p>
+                        </div>
+                        <div className={styles.requestCardSide}>
+                          <span className={styles.requestDeadline}>{item.deadline}</span>
+                          <span className={`${styles.requestUrgency} ${styles[`requestUrgency${item.urgency}`]}`}>
+                            {item.urgency.charAt(0).toUpperCase() + item.urgency.slice(1)}
+                          </span>
+                        </div>
                       </div>
                     </Link>
                   ))}
