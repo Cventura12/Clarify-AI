@@ -1,5 +1,6 @@
 import IntegrationCard from "@/components/IntegrationCard";
 import IntegrationPlaceholder from "@/components/IntegrationPlaceholder";
+import NotionIntegrationCard from "@/components/NotionIntegrationCard";
 import { prisma } from "@/lib/db";
 import { authOptions } from "@/lib/auth";
 import { getServerSession } from "next-auth";
@@ -25,6 +26,7 @@ export default async function IntegrationsPage() {
   });
 
   const googleIntegration = integrations.find((integration) => integration.provider === "google");
+  const notionIntegration = integrations.find((integration) => integration.provider === "notion");
 
   return (
     <div className="space-y-6">
@@ -46,7 +48,11 @@ export default async function IntegrationsPage() {
           metadata={(googleIntegration?.metadata as Record<string, unknown> | null) ?? undefined}
           lastSync={googleIntegration?.syncs?.[0]?.createdAt.toLocaleString() ?? null}
         />
-        <IntegrationPlaceholder name="Notion" description="Send tasks and plans to a Notion database." />
+        <NotionIntegrationCard
+          status={notionIntegration?.status ?? "disconnected"}
+          metadata={(notionIntegration?.metadata as Record<string, unknown> | null) ?? undefined}
+          lastSync={notionIntegration?.syncs?.[0]?.createdAt.toLocaleString() ?? null}
+        />
         <IntegrationPlaceholder name="Slack" description="Push reminders to a Slack channel." />
       </div>
     </div>

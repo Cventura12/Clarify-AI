@@ -6,6 +6,13 @@ import {
   testGoogleCalendarConnection,
   type CalendarEventInput,
 } from "@/lib/integrations/google";
+import {
+  buildNotionItemsFromTasks,
+  syncTasksToNotion,
+  testNotionConnection,
+  type NotionCreatedPage,
+  type NotionSyncItem,
+} from "@/lib/integrations/notion";
 import { authOptions } from "@/lib/auth";
 import { getServerSession } from "next-auth";
 
@@ -36,8 +43,65 @@ export async function POST(
       return Response.json({ error: { message: "Integration not found" } }, { status: 404 });
     }
 
-    if (provider !== "google") {
+    if (provider !== "google" && provider !== "notion") {
       return Response.json({ error: { message: "Unsupported provider" } }, { status: 400 });
+    }
+
+    if (provider === "notion") {
+      const metadata = (integration.metadata as Record<string, unknown> | null) ?? {};
+      const accessToken = typeof metadata.accessToken === "string" ? metadata.accessToken : "";
+      const databaseId = typeof metadata.databaseId === "string" ? metadata.databaseId : "";
+
+      if (!accessToken) {
+        return Response.json({ error: { message: "Missing Notion access token" } }, { status: 400 });
+      }
+
+      if (refreshOnly) {
+        return Response.json({ error: { message: "Notion does not use refresh tokens here" } }, { status: 400 });
+      }
+
+      if (testOnly) {
+        const result = await testNotionConnection(accessToken, databaseId || undefined);
+        const sync = await prisma.integrationSync.create({
+          data: {
+            integrationId: integration.id,
+            status: "tested",
+            result,
+          },
+        });
+        return Response.json({ sync, result });
+      }
+
+      const tasks = await prisma.task.findMany({
+        where: { request: { userId } },
+        orderBy: { createdAt: "desc" },
+        take: 20,
+      });
+      const items = buildNotionItemsFromTasks(tasks);
+
+      type NotionSyncResult =
+        | { dryRun: true; items: NotionSyncItem[] }
+        | { dryRun: false; pages: NotionCreatedPage[] };
+
+      let result: NotionSyncResult = { dryRun: true, items };
+
+      if (!dryRun) {
+        if (!databaseId) {
+          return Response.json({ error: { message: "Missing Notion database id" } }, { status: 400 });
+        }
+        const pages = await syncTasksToNotion(accessToken, databaseId, items);
+        result = { dryRun: false, pages };
+      }
+
+      const sync = await prisma.integrationSync.create({
+        data: {
+          integrationId: integration.id,
+          status: "completed",
+          result,
+        },
+      });
+
+      return Response.json({ sync, result });
     }
 
     const metadata = (integration.metadata as Record<string, unknown> | null) ?? {};

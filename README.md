@@ -8,9 +8,10 @@ Quickstart
 3. Set `DATABASE_URL` and `OPENAI_API_KEY`
 4. Optional: set `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`, `R2_PUBLIC_URL` for file storage
 5. Optional: set `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI` to enable Google OAuth + Gmail/Calendar
-6. Run Prisma migration: `npm run db:migrate`
-7. Seed data: `npm run db:seed`
-8. Start dev server: `npm run dev`
+6. Optional: set `NOTION_CLIENT_ID`, `NOTION_CLIENT_SECRET`, `NOTION_REDIRECT_URI` to enable Notion OAuth
+7. Run Prisma migration: `npm run db:migrate`
+8. Seed data: `npm run db:seed`
+9. Start dev server: `npm run dev`
 
 Plan tracking
 - `docs/12-week-plan.md` for the full plan
