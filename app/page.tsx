@@ -187,15 +187,14 @@ export default async function DashboardPage({
         <div className={styles.dashboard}>
           <div className={`${styles.orb} ${styles.orbOne}`} data-motion="orb" />
           <div className={`${styles.orb} ${styles.orbTwo}`} data-motion="orb" />
-          <section className={styles.headerRow}>
+          <section className={styles.heroRow}>
             <div className={styles.greetingBlock}>
               <p className={styles.greetingKicker}>Execution layer</p>
               <h1 className={styles.greetingTitle}>{greeting}, Caleb</h1>
             </div>
-          </section>
-
-          <section className={styles.commandRow}>
-            <CommandBar />
+            <div className={styles.heroCommand}>
+              <CommandBar />
+            </div>
           </section>
 
           <section className={styles.emptyState}>
@@ -214,15 +213,14 @@ export default async function DashboardPage({
       <div className={styles.dashboard}>
         <div className={`${styles.orb} ${styles.orbOne}`} data-motion="orb" />
         <div className={`${styles.orb} ${styles.orbTwo}`} data-motion="orb" />
-        <section className={styles.headerRow}>
+        <section className={styles.heroRow}>
           <div className={styles.greetingBlock}>
             <p className={styles.greetingKicker}>Execution layer</p>
             <h1 className={styles.greetingTitle}>{greeting}, Caleb</h1>
           </div>
-        </section>
-
-        <section className={styles.commandRow}>
-          <CommandBar />
+          <div className={styles.heroCommand}>
+            <CommandBar />
+          </div>
         </section>
 
         <section className={`${styles.mainGrid} ${suggestions.length === 0 ? styles.mainGridSingle : ""}`}>
