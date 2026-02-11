@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import CommandBar from "@/components/CommandBar";
 import DashboardMotion from "@/components/DashboardMotion";
 import NotificationPanel from "@/components/NotificationPanel";
+import RequestDeleteControls from "@/components/RequestDeleteControls";
 import styles from "./dashboard.module.css";
 import { getFollowUpSuggestions, getScheduledFollowUps } from "@/lib/communications/followups";
 import { prisma } from "@/lib/db";
@@ -136,6 +137,10 @@ export default async function DashboardPage({
     return thread;
   });
   const hasThreads = threads.length > 0;
+  const requestDeleteOptions = requests.map((request) => ({
+    id: request.id,
+    label: request.rawInput.length > 70 ? `${request.rawInput.slice(0, 67).trim()}...` : request.rawInput,
+  }));
 
   const sortedThreads = [...threads].sort((a, b) => {
     if (a.taskStatus === "blocked" && b.taskStatus !== "blocked") return -1;
@@ -296,6 +301,7 @@ export default async function DashboardPage({
             </div>
           ) : null}
         </section>
+        <RequestDeleteControls requests={requestDeleteOptions} />
       </div>
     </DashboardMotion>
   );

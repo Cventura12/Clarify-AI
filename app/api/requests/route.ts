@@ -59,3 +59,22 @@ export async function POST(request: Request) {
     return Response.json({ error: { message: "Failed to create request" } }, { status: 500 });
   }
 }
+
+export async function DELETE() {
+  try {
+    const session = await getServerSession(authOptions);
+    const userId = session?.user?.id;
+    if (!userId) {
+      return Response.json({ error: { message: "Unauthorized" } }, { status: 401 });
+    }
+
+    const deleted = await prisma.request.deleteMany({
+      where: { userId },
+    });
+
+    return Response.json({ deletedCount: deleted.count });
+  } catch (error) {
+    console.error("Requests DELETE error", error);
+    return Response.json({ error: { message: "Failed to delete requests" } }, { status: 500 });
+  }
+}
