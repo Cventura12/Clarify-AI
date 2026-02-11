@@ -141,6 +141,8 @@ export default function Sidebar() {
   const sidebarRef = useRef<HTMLElement>(null);
   const navRef = useRef<HTMLDivElement>(null);
   const hasAnimatedRef = useRef(false);
+  const isReducedMotion =
+    typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   const items = useMemo(
     () =>
@@ -180,12 +182,43 @@ export default function Sidebar() {
     const isDesktop = window.matchMedia("(min-width: 1024px)").matches;
     if (isDesktop) return;
 
-    gsap.fromTo(
-      sidebarRef.current,
-      { x: -320, opacity: 0 },
-      { x: 0, opacity: 1, duration: 0.35, ease: "power3.out" }
-    );
+    const context = gsap.context(() => {
+      gsap.fromTo(
+        sidebarRef.current,
+        { x: -320, opacity: 0 },
+        { x: 0, opacity: 1, duration: 0.35, ease: "power3.out" }
+      );
+
+      if (navRef.current) {
+        const items = navRef.current.querySelectorAll("[data-nav-item]");
+        gsap.fromTo(
+          items,
+          { x: -12, opacity: 0 },
+          { x: 0, opacity: 1, duration: 0.3, stagger: 0.06, ease: "power2.out", delay: 0.05 }
+        );
+      }
+    }, sidebarRef);
+
+    return () => context.revert();
   }, [isOpen]);
+
+  const closeSidebar = () => {
+    if (!sidebarRef.current) {
+      setIsOpen(false);
+      return;
+    }
+    if (isReducedMotion) {
+      setIsOpen(false);
+      return;
+    }
+    gsap.to(sidebarRef.current, {
+      x: -320,
+      opacity: 0,
+      duration: 0.25,
+      ease: "power3.in",
+      onComplete: () => setIsOpen(false),
+    });
+  };
 
   return (
     <>
@@ -210,7 +243,7 @@ export default function Sidebar() {
         <div
           role="presentation"
           className="fixed inset-0 z-40 bg-black/40 lg:hidden"
-          onClick={() => setIsOpen(false)}
+          onClick={closeSidebar}
         />
       ) : null}
 
@@ -232,7 +265,7 @@ export default function Sidebar() {
           </div>
           <button
             type="button"
-            onClick={() => setIsOpen(false)}
+            onClick={closeSidebar}
             className="rounded-full border border-white/10 px-2 py-1 text-xs text-white/70 lg:hidden"
           >
             Close
