@@ -8,7 +8,7 @@ export const getPreferences = async (userId?: string | null) => {
       orderBy: { createdAt: "desc" },
     });
   }
-  return prisma.userPreference.findMany({ orderBy: { createdAt: "desc" } });
+  return [];
 };
 
 export const upsertPreference = async (userId: string, key: string, value: string) => {

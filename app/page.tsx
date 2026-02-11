@@ -1,13 +1,11 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import CommandBar from "@/components/CommandBar";
 import DashboardMotion from "@/components/DashboardMotion";
 import NotificationPanel from "@/components/NotificationPanel";
-import ProfileSummaryCard from "@/components/ProfileSummaryCard";
 import RunStatsCard from "@/components/RunStatsCard";
-import InsightsPanel from "@/components/InsightsPanel";
 import styles from "./dashboard.module.css";
 import { getFollowUpSuggestions, getScheduledFollowUps } from "@/lib/communications/followups";
-import { buildPatternInsights } from "@/lib/context/suggestions";
 import { prisma } from "@/lib/db";
 import { authOptions } from "@/lib/auth";
 import type { Task } from "@prisma/client";
@@ -46,6 +44,21 @@ const urgencyRank: Record<ThreadItem["urgency"], number> = {
   low: 3,
 };
 
+type DashboardView = "all" | "active" | "blocked" | "completed";
+
+const filterThreadsByView = (view: DashboardView, items: ThreadItem[]) => {
+  if (view === "active") {
+    return items.filter((item) => item.taskStatus !== "completed" && item.taskStatus !== "abandoned");
+  }
+  if (view === "blocked") {
+    return items.filter((item) => item.taskStatus === "blocked");
+  }
+  if (view === "completed") {
+    return items.filter((item) => item.taskStatus === "completed");
+  }
+  return items;
+};
+
 const buildThread = (task: Task, requestId: string): ThreadItem => {
   const isGenericTitle = task.title?.toLowerCase().includes("clarify request details");
   const isGenericSummary = task.summary?.toLowerCase().includes("need more detail");
@@ -67,7 +80,18 @@ const buildThread = (task: Task, requestId: string): ThreadItem => {
   };
 };
 
-export default async function DashboardPage() {
+const dashboardViews: Array<{ label: string; value: DashboardView }> = [
+  { label: "All", value: "all" },
+  { label: "Active", value: "active" },
+  { label: "Blocked", value: "blocked" },
+  { label: "Completed", value: "completed" },
+];
+
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams?: { view?: string };
+}) {
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id ?? null;
 
@@ -79,18 +103,24 @@ export default async function DashboardPage() {
     );
   }
 
+  const selectedView = (searchParams?.view ?? "all") as DashboardView;
+  const currentView: DashboardView = dashboardViews.some((view) => view.value === selectedView)
+    ? selectedView
+    : "all";
+
+  const profile = await prisma.userProfile.findFirst({
+    where: { userId },
+  });
+  if (!profile) {
+    redirect("/onboarding");
+  }
+
   const requests = await prisma.request.findMany({
     where: { userId },
     include: {
       tasks: true,
     },
     orderBy: { createdAt: "desc" },
-  });
-  const profile = await prisma.userProfile.findFirst({
-    where: { userId },
-  });
-  const preferences = await prisma.userPreference.findMany({
-    where: { userId },
   });
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
   const planRuns = await prisma.planRun.findMany({
@@ -129,10 +159,7 @@ export default async function DashboardPage() {
     return urgencyRank[a.urgency] - urgencyRank[b.urgency];
   });
 
-  const attentionItems = sortedThreads.filter(
-    (item) => item.urgency === "critical" || item.urgency === "high" || item.taskStatus === "blocked"
-  ).slice(0, 2);
-  const activeThreads = sortedThreads.filter((item) => !attentionItems.includes(item)).slice(0, 4);
+  const visibleThreads = filterThreadsByView(currentView, sortedThreads);
   const scheduledLogs = await prisma.executionLog.findMany({
     where: {
       action: "Follow-up scheduled",
@@ -167,7 +194,6 @@ export default async function DashboardPage() {
     ...getScheduledFollowUps(scheduledItems),
     ...getFollowUpSuggestions(tasks.map((item) => item.task)),
   ].slice(0, 4);
-  const insights = buildPatternInsights(tasks.map((item) => item.task), profile, preferences);
   const runStats = planRuns.reduce(
     (acc, run) => {
       acc.totalRuns += 1;
@@ -239,66 +265,58 @@ export default async function DashboardPage() {
 
         <section className={styles.mainGrid}>
           <div className={styles.leftColumn}>
-            {attentionItems.length > 0 ? (
-              <>
-                <div className={styles.sectionHeaderRow}>
-                  <p className={styles.sectionLabel}>Needs attention now</p>
+            <section data-motion="panel" className={styles.requestSection}>
+              <div className={styles.requestHeader}>
+                <div className={styles.requestHeaderLine}>
+                  <span className={styles.requestHeaderAccent} />
+                  <p className={styles.requestKicker}>Requests</p>
                 </div>
-                <div className={styles.threadList}>
-                  {attentionItems.map((item) => (
-                    <Link
-                      key={item.id}
-                      href={item.requestId ? `/request/${item.requestId}` : "/requests"}
-                      className={`${styles.threadItem} ${styles[`thread${item.urgency}`]}`}
-                    >
-                      <div className={styles.threadContent}>
-                        <p className={styles.threadTitle}>{item.title}</p>
-                        <p className={styles.threadMeta}>
-                          <span className={styles.threadStatus}>{item.taskStatus}</span>
-                          <span className={styles.threadDot}>.</span>
-                          <span className={styles.threadSummary}>{item.summary}</span>
-                        </p>
-                      </div>
-                      <div className={styles.threadBadges}>
-                        <span className={styles.deadlineBadge}>{item.deadline}</span>
-                        <span className={`${styles.urgencyBadge} ${styles[`badge${item.urgency}`]}`}>{item.urgency}</span>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </>
-            ) : null}
+                <h2 className={styles.requestTitle}>All requests</h2>
+                <p className={styles.requestSubtitle}>Track every request and its current status.</p>
+              </div>
 
-            {activeThreads.length > 0 ? (
-              <>
-                <div className={styles.sectionHeaderRow}>
-                  <p className={styles.sectionLabel}>Active threads</p>
-                  <Link className={styles.sectionLink} href="/requests">View all</Link>
-                </div>
-                <div className={styles.threadList}>
-                  {activeThreads.map((item) => (
+              <div className={styles.requestFilters}>
+                {dashboardViews.map((view) => (
+                  <Link
+                    key={view.value}
+                    href={view.value === "all" ? "/" : `/?view=${view.value}`}
+                    className={`${styles.filterPill} ${
+                      currentView === view.value ? styles.filterPillActive : styles.filterPillIdle
+                    }`}
+                  >
+                    {view.label}
+                  </Link>
+                ))}
+              </div>
+
+              {visibleThreads.length === 0 ? (
+                <div className={styles.requestEmpty}>No requests match this view yet.</div>
+              ) : (
+                <div className={styles.requestGrid}>
+                  {visibleThreads.map((item) => (
                     <Link
                       key={item.id}
                       href={item.requestId ? `/request/${item.requestId}` : "/requests"}
-                      className={`${styles.threadItem} ${styles[`thread${item.urgency}`]}`}
+                      data-motion="card"
+                      className={styles.requestCard}
                     >
-                      <div className={styles.threadContent}>
-                        <p className={styles.threadTitle}>{item.title}</p>
-                        <p className={styles.threadMeta}>
-                          <span className={styles.threadStatus}>{item.taskStatus}</span>
-                          <span className={styles.threadDot}>.</span>
-                          <span className={styles.threadSummary}>{item.summary}</span>
-                        </p>
+                      <div className={styles.requestCardHeader}>
+                        <span className={`${styles.requestUrgency} ${styles[`requestUrgency${item.urgency}`]}`}>
+                          {item.urgency}
+                        </span>
+                        <span className={styles.requestDeadline}>{item.deadline}</span>
                       </div>
-                      <div className={styles.threadBadges}>
-                        <span className={styles.deadlineBadge}>{item.deadline}</span>
-                        <span className={`${styles.urgencyBadge} ${styles[`badge${item.urgency}`]}`}>{item.urgency}</span>
+                      <p className={styles.requestCardTitle}>{item.title}</p>
+                      <p className={styles.requestCardSummary}>{item.summary}</p>
+                      <div className={styles.requestCardFooter}>
+                        <span className={styles.requestStatus}>{item.taskStatus}</span>
+                        <span className={styles.requestDetailLink}>View details</span>
                       </div>
                     </Link>
                   ))}
                 </div>
-              </>
-            ) : null}
+              )}
+            </section>
           </div>
 
           <div className={styles.rightColumn}>
@@ -309,9 +327,7 @@ export default async function DashboardPage() {
               skippedDependencies={runStats.skippedDependencies}
               lastRunAt={lastRunAt}
             />
-            <ProfileSummaryCard profile={profile} />
             <NotificationPanel suggestions={suggestions} />
-            <InsightsPanel insights={insights} />
           </div>
         </section>
       </div>

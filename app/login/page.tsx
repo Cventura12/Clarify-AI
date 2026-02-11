@@ -14,7 +14,7 @@ export default function LoginPage() {
       </div>
       <button
         type="button"
-        onClick={() => signIn("google", { callbackUrl: "/" })}
+        onClick={() => signIn("google", { callbackUrl: "/onboarding" })}
         className="rounded-full bg-slate-900 px-6 py-3 text-sm font-semibold text-white"
       >
         Sign in with Google

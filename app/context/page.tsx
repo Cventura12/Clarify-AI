@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/db";
 import { authOptions } from "@/lib/auth";
+import InsightsPanel from "@/components/InsightsPanel";
+import { buildPatternInsights } from "@/lib/context/suggestions";
 import { getServerSession } from "next-auth";
 
 export default async function ContextPage() {
@@ -22,6 +24,18 @@ export default async function ContextPage() {
     where: { userId },
     orderBy: { createdAt: "desc" },
   });
+  const tasks = await prisma.task.findMany({
+    where: { request: { userId } },
+    orderBy: { createdAt: "desc" },
+    take: 200,
+  });
+  const profile = await prisma.userProfile.findFirst({
+    where: { userId },
+  });
+  const preferences = await prisma.userPreference.findMany({
+    where: { userId },
+  });
+  const insights = buildPatternInsights(tasks, profile, preferences);
   const nodeMap = new Map(nodes.map((node) => [node.id, node]));
 
   return (
@@ -31,6 +45,8 @@ export default async function ContextPage() {
         <h1 className="font-display text-3xl text-slate-900">User context</h1>
         <p className="text-sm text-slate-500">Nodes and relationships Clarify has learned.</p>
       </header>
+
+      <InsightsPanel insights={insights} />
 
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="rounded-2xl border border-[#e6e4e1] bg-white p-5 shadow-soft">

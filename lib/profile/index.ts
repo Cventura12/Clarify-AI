@@ -8,7 +8,7 @@ export const getProfile = async (userId?: string | null): Promise<UserProfile | 
       orderBy: { createdAt: "desc" },
     });
   }
-  return prisma.userProfile.findFirst({ orderBy: { createdAt: "desc" } });
+  return null;
 };
 
 export const upsertProfile = async (userId: string, data: Partial<UserProfile>) => {
