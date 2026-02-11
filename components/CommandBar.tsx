@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
@@ -21,18 +21,18 @@ export default function CommandBar() {
 
     const handleFocus = () => {
       gsap.to(form, {
-        boxShadow: "0 28px 70px rgba(79, 70, 229, 0.25)",
-        borderColor: "rgba(124, 141, 255, 0.5)",
-        duration: 0.25,
+        boxShadow: "0 24px 56px rgba(79, 70, 229, 0.18)",
+        borderColor: "rgba(124, 141, 255, 0.45)",
+        duration: 0.2,
         ease: "power2.out",
       });
     };
 
     const handleBlur = () => {
       gsap.to(form, {
-        boxShadow: "0 22px 48px rgba(15, 23, 42, 0.08)",
-        borderColor: "rgba(148, 163, 184, 0.35)",
-        duration: 0.35,
+        boxShadow: "0 16px 34px rgba(15, 23, 42, 0.28)",
+        borderColor: "rgba(148, 163, 184, 0.3)",
+        duration: 0.25,
         ease: "power2.out",
       });
     };
@@ -95,7 +95,7 @@ export default function CommandBar() {
       </div>
 
       <div className={styles.commandActions}>
-        <span className={styles.commandFlow}>interpret → plan → authorize</span>
+        <span className={styles.commandFlow}>interpret -&gt; plan -&gt; authorize</span>
         <button type="submit" disabled={isPending} className={styles.commandButton}>
           {isPending ? "Clarifying" : "Clarify"}
           <svg viewBox="0 0 24 24" className={styles.commandButtonIcon} fill="none" stroke="currentColor" strokeWidth="2">
