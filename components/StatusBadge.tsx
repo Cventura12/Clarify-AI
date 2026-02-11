@@ -6,11 +6,11 @@ export default function StatusBadge({
   tone?: string;
 }) {
   const styles: Record<string, string> = {
-    critical: "border border-red-100 bg-red-50 text-red-700",
-    high: "border border-red-100 bg-red-50 text-red-700",
-    medium: "border border-slate-200 bg-slate-100 text-slate-700",
-    low: "border border-emerald-100 bg-emerald-50 text-emerald-700",
-    neutral: "border border-slate-200 bg-slate-100 text-slate-700",
+    critical: "border border-rose-400/30 bg-rose-500/15 text-rose-300",
+    high: "border border-orange-400/30 bg-orange-500/15 text-orange-300",
+    medium: "border border-slate-400/30 bg-slate-400/10 text-slate-300",
+    low: "border border-emerald-400/30 bg-emerald-500/15 text-emerald-300",
+    neutral: "border border-[var(--border)] bg-[var(--surface-alt)] text-[var(--muted)]",
   };
 
   return (

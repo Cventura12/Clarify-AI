@@ -28,7 +28,7 @@ export default function TaskCard({
 
   if (variant === "compact") {
     return (
-      <div className="rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-soft">
+      <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow)]">
         <div className="flex items-center justify-between text-xs text-slate-400">
           <StatusBadge label={task.urgency} tone={task.urgency} />
           <span className="uppercase tracking-[0.2em]">{task.domain}</span>
@@ -42,7 +42,7 @@ export default function TaskCard({
   return (
     <div
       data-motion="card"
-      className="rounded-3xl border border-slate-200/80 bg-white/90 p-6 shadow-[0_24px_60px_rgba(15,23,42,0.08)] backdrop-blur"
+      className="rounded-3xl border border-[var(--border)] bg-[var(--surface)]/90 p-6 shadow-[var(--shadow)] backdrop-blur"
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>

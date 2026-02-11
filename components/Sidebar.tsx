@@ -253,8 +253,8 @@ export default function Sidebar() {
               data-nav-item
               className={`flex items-center gap-3 rounded-xl border border-transparent px-3 py-2.5 transition ${
                 item.isActive
-                  ? "border-white/35 bg-white/30 text-white shadow-[0_8px_20px_rgba(15,15,15,0.35)] opacity-100"
-                  : "text-slate-100 opacity-100 hover:border-white/20 hover:bg-white/10 hover:text-white"
+                  ? "border-white/30 bg-white/20 text-white shadow-[0_10px_24px_rgba(10,10,10,0.4)]"
+                  : "text-white/80 hover:border-white/20 hover:bg-white/10 hover:text-white"
               }`}
             >
               <Icon name={item.icon} />

@@ -28,9 +28,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <Sidebar />
           <main className="relative flex-1 overflow-hidden bg-[var(--app-main-bg)]">
             <div className="pointer-events-none absolute inset-0">
-              <div className="absolute -top-28 right-[-6rem] h-72 w-72 rounded-full bg-[#c9d7ff]/40 blur-3xl" />
-              <div className="absolute bottom-[-10rem] left-[-8rem] h-80 w-80 rounded-full bg-[#f8dcc6]/40 blur-3xl" />
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.7),transparent_55%)]" />
+              <div className="absolute -top-24 right-[-8rem] h-80 w-80 rounded-full bg-[var(--accent)]/20 blur-[120px]" />
+              <div className="absolute bottom-[-12rem] left-[-10rem] h-96 w-96 rounded-full bg-[var(--accent-2)]/18 blur-[140px]" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.6),transparent_55%)]" />
             </div>
             <div className="relative mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 py-6 sm:px-6 sm:py-8 md:px-10 md:py-12">
               {children}

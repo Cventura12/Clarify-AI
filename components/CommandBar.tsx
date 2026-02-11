@@ -21,8 +21,8 @@ export default function CommandBar() {
 
     const handleFocus = () => {
       gsap.to(form, {
-        boxShadow: "0 26px 64px rgba(99, 102, 241, 0.2)",
-        borderColor: "#c7d2fe",
+        boxShadow: "0 28px 70px rgba(79, 70, 229, 0.25)",
+        borderColor: "rgba(124, 141, 255, 0.5)",
         duration: 0.25,
         ease: "power2.out",
       });
@@ -30,8 +30,8 @@ export default function CommandBar() {
 
     const handleBlur = () => {
       gsap.to(form, {
-        boxShadow: "0 20px 48px rgba(15, 23, 42, 0.08)",
-        borderColor: "rgba(199, 210, 254, 0.8)",
+        boxShadow: "0 22px 48px rgba(15, 23, 42, 0.08)",
+        borderColor: "rgba(148, 163, 184, 0.35)",
         duration: 0.35,
         ease: "power2.out",
       });

@@ -62,32 +62,35 @@ export default async function SettingsPage() {
   return (
     <div className="space-y-6">
       <header className="space-y-2">
-        <p className="text-xs uppercase tracking-[0.25em] text-slate-400">Settings</p>
-        <h1 className="font-display text-3xl text-slate-900">Workspace settings</h1>
-        <p className="text-sm text-slate-500">Manage your profile, data, and advanced tools.</p>
+        <div className="flex items-center gap-3">
+          <span className="h-0.5 w-8 rounded-full bg-[var(--accent)]" />
+          <p className="text-xs uppercase tracking-[0.3em] text-[var(--kicker)]">Settings</p>
+        </div>
+        <h1 className="font-display text-3xl text-[var(--text)]">Workspace settings</h1>
+        <p className="text-sm text-[var(--muted)]">Manage your profile, data, and advanced tools.</p>
       </header>
 
       <div className="space-y-6">
         {workspaceCount === 0 && intelligenceCount === 0 ? (
-          <div className="rounded-2xl border border-[#e6e4e1] bg-white p-6 text-sm text-slate-500 shadow-soft">
+          <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 text-sm text-[var(--muted)] shadow-[var(--shadow)]">
             Advanced sections will appear after you generate drafts, files, deadlines, or memory.
           </div>
         ) : null}
         {sections.map((section) => (
-          <div key={section.title} className="rounded-2xl border border-[#e6e4e1] bg-white p-5 shadow-soft">
+          <div key={section.title} className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow)]">
             <div className="flex items-center justify-between">
-              <p className="text-xs uppercase tracking-[0.25em] text-slate-400">{section.title}</p>
-              <span className="text-xs text-slate-400">{section.items.length} items</span>
+              <p className="text-xs uppercase tracking-[0.3em] text-[var(--kicker)]">{section.title}</p>
+              <span className="text-xs text-[var(--kicker)]">{section.items.length} items</span>
             </div>
             <div className="mt-4 grid gap-3 md:grid-cols-2">
               {section.items.map((item) => (
                 <Link
                   key={item.label}
                   href={item.href}
-                  className="rounded-xl border border-[#ece9e5] bg-[#fbfaf8] p-4 transition hover:border-[#d8d4cf]"
+                  className="rounded-xl border border-[var(--border)] bg-[var(--surface-soft)] p-4 transition hover:border-[var(--border-strong)]"
                 >
-                  <p className="text-sm font-semibold text-slate-900">{item.label}</p>
-                  <p className="text-xs text-slate-500">{item.description}</p>
+                  <p className="text-sm font-semibold text-[var(--text)]">{item.label}</p>
+                  <p className="text-xs text-[var(--muted)]">{item.description}</p>
                 </Link>
               ))}
             </div>

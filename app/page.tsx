@@ -322,7 +322,7 @@ export default async function DashboardPage() {
                   >
                     <StatusGlyph kind={card.statusKind} />
                   </span>
-                  <span>{card.statusText}</span>
+                  <span className={styles.cardStatusText}>{card.statusText}</span>
                 </div>
                 <div className={styles.cardFooter}>
                   {card.requestId ? (

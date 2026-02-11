@@ -1,7 +1,7 @@
 .card {
   border-radius: 28px;
   border: 1px solid var(--border);
-  background: linear-gradient(180deg, var(--surface) 0%, var(--surface-alt) 100%);
+  background: linear-gradient(180deg, var(--surface) 0%, var(--surface-soft) 100%);
   padding: 24px;
   box-shadow: var(--shadow);
 }
@@ -46,7 +46,7 @@
 .progressFill {
   height: 8px;
   border-radius: 999px;
-  background: linear-gradient(90deg, #6366f1, #14b8a6);
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
 }
 
 .detail {
@@ -79,7 +79,7 @@
 }
 
 .button:hover {
-  border-color: #cbd5f5;
+  border-color: var(--chip-border);
 }
 
 @media (max-width: 640px) {

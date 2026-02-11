@@ -29,9 +29,12 @@ export default async function IntegrationsPage() {
   return (
     <div className="space-y-6">
       <header className="space-y-2">
-        <p className="text-xs uppercase tracking-[0.25em] text-slate-400">Integrations</p>
-        <h1 className="font-display text-3xl text-slate-900">Connected services</h1>
-        <p className="text-sm text-slate-500">Connect external systems to enable syncing and automation.</p>
+        <div className="flex items-center gap-3">
+          <span className="h-0.5 w-8 rounded-full bg-[var(--accent)]" />
+          <p className="text-xs uppercase tracking-[0.3em] text-[var(--kicker)]">Integrations</p>
+        </div>
+        <h1 className="font-display text-3xl text-[var(--text)]">Connected services</h1>
+        <p className="text-sm text-[var(--muted)]">Connect external systems to enable syncing and automation.</p>
       </header>
 
       <div className="grid gap-6 lg:grid-cols-2">

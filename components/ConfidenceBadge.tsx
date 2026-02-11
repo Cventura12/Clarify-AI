@@ -6,9 +6,9 @@ type ConfidenceBadgeProps = {
 const clampPercent = (value: number) => Math.min(99, Math.max(1, Math.round(value * 100)));
 
 const getTone = (score: number) => {
-  if (score >= 0.75) return "bg-emerald-50 text-emerald-700 border-emerald-100";
-  if (score >= 0.5) return "bg-amber-50 text-amber-700 border-amber-100";
-  return "bg-rose-50 text-rose-700 border-rose-100";
+  if (score >= 0.75) return "border-emerald-400/30 bg-emerald-500/15 text-emerald-300";
+  if (score >= 0.5) return "border-amber-400/30 bg-amber-500/15 text-amber-300";
+  return "border-rose-400/30 bg-rose-500/15 text-rose-300";
 };
 
 const getLabel = (score: number) => {
