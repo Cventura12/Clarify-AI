@@ -1,9 +1,9 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { redirect } from "next/navigation";
 import CommandBar from "@/components/CommandBar";
+import DashboardRequestList from "@/components/DashboardRequestList";
 import DashboardMotion from "@/components/DashboardMotion";
 import NotificationPanel from "@/components/NotificationPanel";
-import RequestDeleteControls from "@/components/RequestDeleteControls";
 import styles from "./dashboard.module.css";
 import { getFollowUpSuggestions, getScheduledFollowUps } from "@/lib/communications/followups";
 import { prisma } from "@/lib/db";
@@ -62,13 +62,9 @@ const filterThreadsByView = (view: DashboardView, items: ThreadItem[]) => {
 const buildThread = (task: Task, requestId: string): ThreadItem => {
   const isGenericTitle = task.title?.toLowerCase().includes("clarify request details");
   const isGenericSummary = task.summary?.toLowerCase().includes("need more detail");
-  const title =
-    task.title && !isGenericTitle
-      ? task.title
-      : task.summary || "Untitled request";
+  const title = task.title && !isGenericTitle ? task.title : task.summary || "Untitled request";
   const summary = !isGenericSummary ? task.summary?.trim() || "Awaiting next step" : "Awaiting next step";
-  const compactSummary =
-    summary.length > 120 ? `${summary.slice(0, 117).trim()}...` : summary;
+  const compactSummary = summary.length > 120 ? `${summary.slice(0, 117).trim()}...` : summary;
   return {
     id: task.id,
     title,
@@ -122,6 +118,7 @@ export default async function DashboardPage({
     },
     orderBy: { createdAt: "desc" },
   });
+
   const tasks = requests.flatMap((request) =>
     request.tasks.map((task) => ({ task, requestId: request.id, rawInput: request.rawInput }))
   );
@@ -136,11 +133,8 @@ export default async function DashboardPage({
     }
     return thread;
   });
+
   const hasThreads = threads.length > 0;
-  const requestDeleteOptions = requests.map((request) => ({
-    id: request.id,
-    label: request.rawInput.length > 70 ? `${request.rawInput.slice(0, 67).trim()}...` : request.rawInput,
-  }));
 
   const sortedThreads = [...threads].sort((a, b) => {
     if (a.taskStatus === "blocked" && b.taskStatus !== "blocked") return -1;
@@ -149,6 +143,7 @@ export default async function DashboardPage({
   });
 
   const visibleThreads = filterThreadsByView(currentView, sortedThreads);
+
   const scheduledLogs = await prisma.executionLog.findMany({
     where: {
       action: "Follow-up scheduled",
@@ -175,17 +170,16 @@ export default async function DashboardPage({
       return { id: log.id, followUpAt, subject };
     })
     .filter(
-      (item): item is { id: string; followUpAt: string; subject: string | undefined } =>
-        item !== null
+      (item): item is { id: string; followUpAt: string; subject: string | undefined } => item !== null
     );
 
   const suggestions = [
     ...getScheduledFollowUps(scheduledItems),
     ...getFollowUpSuggestions(tasks.map((item) => item.task)),
   ].slice(0, 4);
+
   const greetingHour = new Date().getHours();
-  const greeting =
-    greetingHour < 12 ? "Good morning" : greetingHour < 18 ? "Good afternoon" : "Good evening";
+  const greeting = greetingHour < 12 ? "Good morning" : greetingHour < 18 ? "Good afternoon" : "Good evening";
 
   if (!hasThreads) {
     return (
@@ -196,9 +190,7 @@ export default async function DashboardPage({
           <section className={styles.headerRow}>
             <div className={styles.greetingBlock}>
               <p className={styles.greetingKicker}>Execution layer</p>
-              <h1 className={styles.greetingTitle}>
-                {greeting}, Caleb
-              </h1>
+              <h1 className={styles.greetingTitle}>{greeting}, Caleb</h1>
             </div>
           </section>
 
@@ -225,9 +217,7 @@ export default async function DashboardPage({
         <section className={styles.headerRow}>
           <div className={styles.greetingBlock}>
             <p className={styles.greetingKicker}>Execution layer</p>
-            <h1 className={styles.greetingTitle}>
-              {greeting}, Caleb
-            </h1>
+            <h1 className={styles.greetingTitle}>{greeting}, Caleb</h1>
           </div>
         </section>
 
@@ -264,33 +254,7 @@ export default async function DashboardPage({
               {visibleThreads.length === 0 ? (
                 <div className={styles.requestEmpty}>No requests match this view yet.</div>
               ) : (
-                <div className={styles.requestGrid}>
-                  {visibleThreads.map((item) => (
-                    <Link
-                      key={item.id}
-                      href={item.requestId ? `/request/${item.requestId}` : "/requests"}
-                      data-motion="card"
-                      className={styles.requestCard}
-                    >
-                      <div className={styles.requestCardBody}>
-                        <div className={styles.requestCardMain}>
-                          <p className={styles.requestCardTitle}>{item.title}</p>
-                          <p className={styles.requestMetaLine}>
-                            <span className={styles.requestStatus}>{item.taskStatus}</span>
-                            <span className={styles.requestDot}>•</span>
-                            <span className={styles.requestMetaText}>{item.summary || "Awaiting next step"}</span>
-                          </p>
-                        </div>
-                        <div className={styles.requestCardSide}>
-                          <span className={styles.requestDeadline}>{item.deadline}</span>
-                          <span className={`${styles.requestUrgency} ${styles[`requestUrgency${item.urgency}`]}`}>
-                            {item.urgency.charAt(0).toUpperCase() + item.urgency.slice(1)}
-                          </span>
-                        </div>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
+                <DashboardRequestList threads={visibleThreads} />
               )}
             </section>
           </div>
@@ -301,10 +265,7 @@ export default async function DashboardPage({
             </div>
           ) : null}
         </section>
-        <RequestDeleteControls requests={requestDeleteOptions} />
       </div>
     </DashboardMotion>
   );
 }
-
-
