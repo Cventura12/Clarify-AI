@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { authOptions } from "@/lib/auth";
+import RunStatsCard from "@/components/RunStatsCard";
 import { getServerSession } from "next-auth";
 
 const baseSections = [
@@ -59,6 +60,28 @@ export default async function SettingsPage() {
     ...(intelligenceCount > 0 ? [baseSections[2]] : []),
   ];
 
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const planRuns = await prisma.planRun.findMany({
+    where: {
+      createdAt: { gte: sevenDaysAgo },
+      plan: { task: { request: { userId } } },
+    },
+    orderBy: { createdAt: "desc" },
+    take: 50,
+  });
+
+  const runStats = planRuns.reduce(
+    (acc, run) => {
+      acc.totalRuns += 1;
+      acc.executedSteps += run.executedCount;
+      acc.skippedUnauthorized += run.skippedUnauthorized;
+      acc.skippedDependencies += run.skippedDependencies;
+      return acc;
+    },
+    { totalRuns: 0, executedSteps: 0, skippedUnauthorized: 0, skippedDependencies: 0 }
+  );
+  const lastRunAt = planRuns[0]?.createdAt ?? null;
+
   return (
     <div className="space-y-6">
       <header className="space-y-2">
@@ -69,6 +92,14 @@ export default async function SettingsPage() {
         <h1 className="font-display text-3xl text-[var(--text)]">Workspace settings</h1>
         <p className="text-sm text-[var(--muted)]">Manage your profile, data, and advanced tools.</p>
       </header>
+
+      <RunStatsCard
+        totalRuns={runStats.totalRuns}
+        executedSteps={runStats.executedSteps}
+        skippedUnauthorized={runStats.skippedUnauthorized}
+        skippedDependencies={runStats.skippedDependencies}
+        lastRunAt={lastRunAt}
+      />
 
       <div className="space-y-6">
         {workspaceCount === 0 && intelligenceCount === 0 ? (

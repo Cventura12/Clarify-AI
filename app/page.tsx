@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import CommandBar from "@/components/CommandBar";
 import DashboardMotion from "@/components/DashboardMotion";
 import NotificationPanel from "@/components/NotificationPanel";
-import RunStatsCard from "@/components/RunStatsCard";
 import styles from "./dashboard.module.css";
 import { getFollowUpSuggestions, getScheduledFollowUps } from "@/lib/communications/followups";
 import { prisma } from "@/lib/db";
@@ -122,16 +121,6 @@ export default async function DashboardPage({
     },
     orderBy: { createdAt: "desc" },
   });
-  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-  const planRuns = await prisma.planRun.findMany({
-    where: {
-      createdAt: { gte: sevenDaysAgo },
-      plan: { task: { request: { userId } } },
-    },
-    orderBy: { createdAt: "desc" },
-    take: 50,
-  });
-
   const tasks = requests.flatMap((request) =>
     request.tasks.map((task) => ({ task, requestId: request.id, rawInput: request.rawInput }))
   );
@@ -194,17 +183,6 @@ export default async function DashboardPage({
     ...getScheduledFollowUps(scheduledItems),
     ...getFollowUpSuggestions(tasks.map((item) => item.task)),
   ].slice(0, 4);
-  const runStats = planRuns.reduce(
-    (acc, run) => {
-      acc.totalRuns += 1;
-      acc.executedSteps += run.executedCount;
-      acc.skippedUnauthorized += run.skippedUnauthorized;
-      acc.skippedDependencies += run.skippedDependencies;
-      return acc;
-    },
-    { totalRuns: 0, executedSteps: 0, skippedUnauthorized: 0, skippedDependencies: 0 }
-  );
-  const lastRunAt = planRuns[0]?.createdAt ?? null;
   const greetingHour = new Date().getHours();
   const greeting =
     greetingHour < 12 ? "Good morning" : greetingHour < 18 ? "Good afternoon" : "Good evening";
@@ -263,7 +241,7 @@ export default async function DashboardPage({
           <CommandBar />
         </section>
 
-        <section className={styles.mainGrid}>
+        <section className={`${styles.mainGrid} ${suggestions.length === 0 ? styles.mainGridSingle : ""}`}>
           <div className={styles.leftColumn}>
             <section data-motion="panel" className={styles.requestSection}>
               <div className={styles.requestHeader}>
@@ -319,16 +297,11 @@ export default async function DashboardPage({
             </section>
           </div>
 
-          <div className={styles.rightColumn}>
-            <RunStatsCard
-              totalRuns={runStats.totalRuns}
-              executedSteps={runStats.executedSteps}
-              skippedUnauthorized={runStats.skippedUnauthorized}
-              skippedDependencies={runStats.skippedDependencies}
-              lastRunAt={lastRunAt}
-            />
-            <NotificationPanel suggestions={suggestions} />
-          </div>
+          {suggestions.length > 0 ? (
+            <div className={styles.rightColumn}>
+              <NotificationPanel suggestions={suggestions} />
+            </div>
+          ) : null}
         </section>
       </div>
     </DashboardMotion>
