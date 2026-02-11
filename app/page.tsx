@@ -137,11 +137,6 @@ export default async function DashboardPage({
   });
   const hasThreads = threads.length > 0;
 
-  const activeCount = threads.filter((item) => item.taskStatus !== "completed" && item.taskStatus !== "abandoned").length;
-  const blockedCount = threads.filter((item) => item.taskStatus === "blocked").length;
-  const criticalCount = threads.filter((item) => item.urgency === "critical").length;
-  const highCount = threads.filter((item) => item.urgency === "high").length;
-
   const sortedThreads = [...threads].sort((a, b) => {
     if (a.taskStatus === "blocked" && b.taskStatus !== "blocked") return -1;
     if (b.taskStatus === "blocked" && a.taskStatus !== "blocked") return 1;
@@ -228,12 +223,6 @@ export default async function DashboardPage({
             <h1 className={styles.greetingTitle}>
               {greeting}, Caleb
             </h1>
-            <div className={styles.statPills}>
-              <span className={`${styles.statPill} ${styles.statCritical}`}>{criticalCount} critical</span>
-              <span className={`${styles.statPill} ${styles.statHigh}`}>{highCount} high</span>
-              <span className={`${styles.statPill} ${styles.statBlocked}`}>{blockedCount} blocked</span>
-              <span className={`${styles.statPill} ${styles.statActive}`}>{activeCount} active</span>
-            </div>
           </div>
         </section>
 
