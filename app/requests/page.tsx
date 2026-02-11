@@ -22,6 +22,17 @@ const urgencyTone: Record<string, string> = {
   low: "border border-emerald-400/30 bg-emerald-500/15 text-emerald-300",
 };
 
+const isGenericTitle = (value: string) =>
+  value.trim().toLowerCase().includes("clarify request details");
+
+const deriveDisplayTitle = (title: string, summary: string, rawInput: string) => {
+  if (title && !isGenericTitle(title)) return title;
+  if (summary && !summary.toLowerCase().includes("need more detail")) {
+    return summary.length > 90 ? `${summary.slice(0, 87).trim()}...` : summary;
+  }
+  return rawInput.length > 90 ? `${rawInput.slice(0, 87).trim()}...` : rawInput;
+};
+
 const filterTasks = (view: string, tasks: Array<{ taskStatus: string }>) => {
   if (view === "active") {
     return tasks.filter((task) => task.taskStatus !== "completed" && task.taskStatus !== "abandoned");
@@ -117,7 +128,9 @@ export default async function RequestsPage({
                 </span>
                 <span className="text-[var(--kicker)]">{formatDeadline(task.dates)}</span>
               </div>
-              <h3 className="mt-2 text-sm font-semibold text-[var(--text)]">{task.title}</h3>
+              <h3 className="mt-2 text-sm font-semibold text-[var(--text)]">
+                {deriveDisplayTitle(task.title, task.summary, request.rawInput)}
+              </h3>
               <p className="mt-1 text-xs text-[var(--muted)] line-clamp-2">{task.summary}</p>
               <div className="mt-4 flex justify-end text-xs text-[var(--kicker)]">
                 <Link className="flex items-center gap-1" href={`/request/${request.id}`}>

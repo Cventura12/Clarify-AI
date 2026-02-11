@@ -58,8 +58,36 @@ export async function POST(request: Request) {
     }
 
     const planResult = await buildPlan(parsedTask.data);
-    const planData = "error" in planResult ? fallbackPlan(parsedTask.data) : planResult.data;
-    const planConfidence = "error" in planResult ? 0.35 : scorePlan(planData);
+
+    if ("error" in planResult) {
+      return Response.json(
+        {
+          error: {
+            message:
+              "Plan quality is too low to auto-generate. Refine the interpretation first, then retry planning.",
+            reason: planResult.error.message,
+          },
+        },
+        { status: 422 }
+      );
+    }
+
+    const planData = planResult.data;
+    const planConfidence = scorePlan(planData);
+
+    if (planConfidence < 0.45) {
+      return Response.json(
+        {
+          error: {
+            message:
+              "Plan quality is too low to show. Please adjust interpretation details and regenerate.",
+            confidence: planConfidence,
+          },
+        },
+        { status: 422 }
+      );
+    }
+
     if (planData.task_id !== parsedTask.data.task_id) {
       return Response.json(
         { error: { message: "Plan task_id does not match the requested task" } },
@@ -132,8 +160,7 @@ export async function POST(request: Request) {
     return Response.json({
       plan: planRecord,
       confidence: planConfidence,
-      fallback: "error" in planResult,
-      error: "error" in planResult ? planResult.error : undefined,
+      fallback: false,
     });
   } catch (error) {
     console.error("Plan route error", error);

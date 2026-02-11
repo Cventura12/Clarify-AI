@@ -1,5 +1,4 @@
 import AmbiguityPrompt from "@/components/AmbiguityPrompt";
-import ConfidenceBadge from "@/components/ConfidenceBadge";
 import PlanView from "@/components/PlanView";
 import StatusBadge from "@/components/StatusBadge";
 import type { Plan, Step, Task } from "@prisma/client";
@@ -53,7 +52,6 @@ export default function TaskCard({
           <StatusBadge label={task.domain} tone="neutral" />
           <StatusBadge label={task.urgency} tone={task.urgency} />
           <StatusBadge label={task.complexity} tone="neutral" />
-          <ConfidenceBadge score={task.confidenceScore} />
         </div>
       </div>
 

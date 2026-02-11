@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import type { Plan, Step } from "@prisma/client";
 import type { JsonValue } from "@prisma/client/runtime/library";
-import ConfidenceBadge from "@/components/ConfidenceBadge";
 
 const asArray = <T,>(value: JsonValue): T[] => (Array.isArray(value) ? (value as T[]) : []);
 
@@ -106,7 +105,6 @@ export default function PlanView({ plan }: { plan: Plan & { steps: Step[] } }) {
             {plan.totalSteps} steps - {plan.estimatedTotalEffort}
           </p>
         </div>
-        <ConfidenceBadge score={plan.confidenceScore} />
         <button
           type="button"
           onClick={runPlan}

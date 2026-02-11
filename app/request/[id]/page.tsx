@@ -98,7 +98,10 @@ export default async function RequestDetailPage({
         <p className="text-xs uppercase tracking-[0.25em] text-slate-400">
           Request Detail
         </p>
-        <h1 className="font-display text-3xl text-slate-900">{request.rawInput}</h1>
+        <h1 className="font-display text-2xl text-slate-900">Request overview</h1>
+        <blockquote className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-base leading-relaxed text-slate-600">
+          {request.rawInput}
+        </blockquote>
         <p className="text-sm text-slate-500">
           Created {request.createdAt.toLocaleString()}
         </p>

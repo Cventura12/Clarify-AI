@@ -11,6 +11,47 @@ const statusTone: Record<string, string> = {
   created: "bg-slate-100 text-slate-600",
 };
 
+const describeDetail = (log: ExecutionLog) => {
+  const detail =
+    log.detail && typeof log.detail === "object" && !Array.isArray(log.detail)
+      ? (log.detail as Record<string, unknown>)
+      : null;
+
+  if (!detail) return null;
+
+  if (log.action === "Step rejected") {
+    const stepNumber = typeof detail.stepNumber === "number" ? detail.stepNumber : null;
+    const action = typeof detail.action === "string" ? detail.action : "step";
+    return stepNumber ? `You skipped step ${stepNumber}: ${action}.` : "You skipped this step.";
+  }
+
+  if (log.action === "Step authorized") {
+    const stepNumber = typeof detail.stepNumber === "number" ? detail.stepNumber : null;
+    return stepNumber ? `Approved step ${stepNumber}.` : "Step approved.";
+  }
+
+  if (log.action === "Draft sent") {
+    const subject = typeof detail.subject === "string" ? detail.subject : "Draft email";
+    const to = typeof detail.to === "string" ? detail.to : "recipient";
+    return `Sent "${subject}" to ${to}.`;
+  }
+
+  if (log.action === "Follow-up scheduled") {
+    const followUpAt = typeof detail.followUpAt === "string" ? detail.followUpAt : null;
+    if (!followUpAt) return "Follow-up reminder scheduled.";
+    const parsed = new Date(followUpAt);
+    return Number.isNaN(parsed.getTime())
+      ? "Follow-up reminder scheduled."
+      : `Follow-up reminder set for ${parsed.toLocaleDateString()}.`;
+  }
+
+  if (log.action === "Step executed" && typeof detail.outcome === "string") {
+    return detail.outcome;
+  }
+
+  return null;
+};
+
 export default function ExecutionLogList({ logs }: { logs: ExecutionLog[] }) {
   if (logs.length === 0) {
     return (
@@ -36,9 +77,9 @@ export default function ExecutionLogList({ logs }: { logs: ExecutionLog[] }) {
             <div>
               <p className="font-semibold text-slate-900">{log.action}</p>
               <p className="text-xs text-slate-400">{log.createdAt.toLocaleString()}</p>
-              {log.detail ? (
+              {describeDetail(log) ? (
                 <p className="mt-1 text-xs text-slate-500">
-                  {JSON.stringify(log.detail)}
+                  {describeDetail(log)}
                 </p>
               ) : null}
             </div>

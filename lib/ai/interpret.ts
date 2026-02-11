@@ -15,27 +15,42 @@ export type AIError = {
   issues?: unknown;
 };
 
-const SYSTEM_PROMPT = `You are the interpretation engine for Clarify, a personal execution layer.
+const SYSTEM_PROMPT = `You are the interpretation engine for Clarify, a personal execution layer that helps people resolve life admin tasks.
 
 Your job is to take a raw, messy human request and return a structured interpretation. You do NOT plan. You do NOT act. You only interpret.
 
 When you receive a request, do the following:
 
-1) DECOMPOSE: Separate distinct tasks. Each task gets its own interpretation object.
-2) CLASSIFY:
- - domain: follow_up | portal | job_application | scholarship | academic | financial | medical | legal | housing | other
- - urgency: critical | high | medium | low
- - complexity: simple | moderate | complex
-3) EXTRACT: entities, dates, statuses.
-4) FLAG AMBIGUITIES: identify missing info and why it matters. Do not guess.
-5) SURFACE HIDDEN DEPENDENCIES: include likely blockers user did not mention.
+1) DECOMPOSE: If the request contains multiple distinct tasks, separate them. Each task gets its own interpretation object.
+
+2) CLASSIFY: For each task, identify:
+- domain: one of [follow_up, portal, job_application, scholarship, academic, financial, medical, legal, housing, other]
+- urgency: one of [critical, high, medium, low]
+  critical = deadline within 48 hours or irreversible consequence
+  high = deadline within 7 days
+  medium = deadline within 30 days
+  low = no hard deadline
+- complexity: one of [simple, moderate, complex]
+  simple = 1-2 steps, no dependencies
+  moderate = 3-5 steps, some dependencies
+  complex = 5+ steps, multiple dependencies or external parties
+
+3) EXTRACT:
+- entities
+- dates
+- statuses
+
+4) FLAG AMBIGUITIES: Identify what is unclear or missing. For each ambiguity, explain what you need and why it matters.
+
+5) SURFACE HIDDEN DEPENDENCIES: Identify things the user probably did not think of.
 
 Rules:
-- Return JSON only. No markdown.
-- Each task must have a specific, real title (never generic placeholders).
+- Return JSON only, no surrounding text.
+- Do not output placeholder titles like "Clarify request details".
+- Keep titles concrete and tied to the actual user request.
 - Preserve raw_input exactly.
 - Use null for unknown dates.
-- If no cross-task links, return an empty array.`;
+- If no cross-task links, return [] for cross_task_dependencies.`;
 
 const DOMAIN_VALUES = new Set([
   "follow_up",
@@ -55,6 +70,13 @@ const COMPLEXITY_VALUES = new Set(["simple", "moderate", "complex"]);
 const ENTITY_VALUES = new Set(["organization", "person", "portal", "platform", "document"]);
 const DATE_SOURCE_VALUES = new Set(["stated", "inferred", "unknown"]);
 const RELATION_VALUES = new Set(["blocks", "informs", "shares_deadline"]);
+const GENERIC_TITLE_PATTERNS = [
+  "clarify request details",
+  "clarify details",
+  "need more detail",
+  "task",
+  "request details",
+];
 
 const asRecord = (value: unknown): Record<string, unknown> =>
   value && typeof value === "object" && !Array.isArray(value)
@@ -63,6 +85,29 @@ const asRecord = (value: unknown): Record<string, unknown> =>
 
 const asString = (value: unknown, fallback = ""): string =>
   typeof value === "string" ? value : fallback;
+
+const isGenericTitle = (value: string) => {
+  const normalized = value.trim().toLowerCase();
+  return GENERIC_TITLE_PATTERNS.some((pattern) => normalized.includes(pattern));
+};
+
+const deriveTaskTitleFromText = (text: string, index: number) => {
+  const cleaned = text
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/^[,.\-:\s]+/, "")
+    .replace(/[.?!,;:]+$/, "");
+  if (!cleaned) {
+    return `Task ${index + 1}`;
+  }
+
+  if (cleaned.length <= 72) {
+    return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+  }
+
+  const truncated = cleaned.slice(0, 72).trim();
+  return `${truncated}${cleaned.length > 72 ? "..." : ""}`;
+};
 
 const normalizeEnum = <T extends string>(value: unknown, allowed: Set<T>, fallback: T): T => {
   const candidate = typeof value === "string" ? (value.trim().toLowerCase() as T) : fallback;
@@ -98,6 +143,14 @@ const normalizeTasks = (value: unknown, input: string) => {
   return value.map((item, index) => {
     const record = asRecord(item);
     const hiddenDependencies = record.hidden_dependencies ?? record.hiddenDependencies;
+    const rawTitle =
+      asString(record.title).trim() ||
+      asString(record.summary).trim() ||
+      asString(record.action).trim() ||
+      "";
+    const normalizedTitle = isGenericTitle(rawTitle)
+      ? deriveTaskTitleFromText(asString(record.summary).trim() || input, index)
+      : rawTitle || deriveTaskTitleFromText(input, index);
 
     return {
       task_id:
@@ -105,14 +158,10 @@ const normalizeTasks = (value: unknown, input: string) => {
         asString(record.taskId) ||
         asString(record.id) ||
         `task_${index + 1}_${crypto.randomUUID()}`,
-      title:
-        asString(record.title).trim() ||
-        asString(record.summary).trim() ||
-        asString(record.action).trim() ||
-        `Task ${index + 1}: ${input.slice(0, 60).trim()}`,
+      title: normalizedTitle,
       summary:
         asString(record.summary).trim() ||
-        asString(record.title).trim() ||
+        normalizedTitle ||
         input,
       domain: normalizeEnum(record.domain, DOMAIN_VALUES, "other"),
       urgency: normalizeEnum(record.urgency, URGENCY_VALUES, "medium"),

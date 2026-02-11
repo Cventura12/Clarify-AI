@@ -10,6 +10,7 @@ const weekdayPattern =
   /\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday|today|tomorrow)\b/i;
 
 const inDaysPattern = /\bin\s+(\d{1,2})\s+days?\b/i;
+const explicitSplitPattern = /\s(?:also|plus|additionally)\s|;\s|\. (?=[A-Z])|\s-\s|\s—\s/i;
 
 const normalizeTitle = (segment: string) => {
   const cleaned = segment
@@ -119,12 +120,227 @@ const deriveComplexity = (segment: string): TaskInterpretation["complexity"] => 
 
 const splitIntoTaskSegments = (input: string) => {
   const normalized = input.replace(/\s+/g, " ").trim();
-  const parts = normalized
-    .split(/\s(?:also|plus)\s|;\s|\. (?=[A-Z])/i)
+  const coarseParts = normalized
+    .split(explicitSplitPattern)
     .map((part) => part.trim())
     .filter((part) => part.length > 6);
 
+  const parts = (coarseParts.length > 0 ? coarseParts : [normalized]).flatMap((part) => {
+    const lowered = part.toLowerCase();
+    const hasManyActions =
+      /(need to|check|verify|follow up|compare|submit|email|log in|review|confirm)/g.test(lowered) &&
+      lowered.includes(" and ") &&
+      part.length > 90;
+
+    if (!hasManyActions) return [part];
+
+    return part
+      .split(/\s+and\s+(?=(?:i\s+)?(?:need to|have to|must|check|verify|follow|compare|email|submit|review|confirm))/i)
+      .map((chunk) => chunk.trim())
+      .filter((chunk) => chunk.length > 8);
+  });
+
   return parts.length > 0 ? parts : [normalized];
+};
+
+const extractDeadline = (task: TaskInterpretation) => {
+  const firstDate = task.dates.find((item) => item.date)?.date ?? null;
+  if (!firstDate) return null;
+  const parsed = new Date(firstDate);
+  return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
+};
+
+const nextDayIso = (daysFromNow: number) => {
+  const next = new Date();
+  next.setDate(next.getDate() + daysFromNow);
+  return next.toISOString();
+};
+
+const buildPlanSteps = (task: TaskInterpretation): PlanResponse["steps"] => {
+  const text = `${task.title} ${task.summary}`.toLowerCase();
+
+  if (task.domain === "follow_up") {
+    return [
+      {
+        step_number: 1,
+        action: "Review prior communication context",
+        detail: "Confirm when the last message was sent and what response is still needed.",
+        dependencies: [],
+        effort: "quick",
+        delegation: "can_track",
+        suggested_date: null,
+        status: "ready",
+      },
+      {
+        step_number: 2,
+        action: "Draft follow-up message",
+        detail: "Create a concise follow-up with the exact ask and deadline context.",
+        dependencies: [{ type: "information", description: "Recipient and goal confirmed", step_ref: 1 }],
+        effort: "short",
+        delegation: "can_draft",
+        suggested_date: null,
+        status: "pending",
+      },
+      {
+        step_number: 3,
+        action: "Send follow-up from your inbox",
+        detail: "Review the draft, finalize tone, and send to the intended recipient.",
+        dependencies: [{ type: "step", description: "Draft complete", step_ref: 2 }],
+        effort: "quick",
+        delegation: "user_only",
+        suggested_date: null,
+        status: "pending",
+      },
+      {
+        step_number: 4,
+        action: "Schedule response check",
+        detail: "Set a 3-day follow-up reminder if no response arrives.",
+        dependencies: [{ type: "step", description: "Message sent", step_ref: 3 }],
+        effort: "quick",
+        delegation: "can_remind",
+        suggested_date: nextDayIso(3),
+        status: "pending",
+      },
+    ];
+  }
+
+  if (task.domain === "portal" || text.includes("nyu") || text.includes("portal")) {
+    return [
+      {
+        step_number: 1,
+        action: "Log into the target portal",
+        detail: "Open the portal and navigate to the relevant request or application status screen.",
+        dependencies: [],
+        effort: "quick",
+        delegation: "user_only",
+        suggested_date: null,
+        status: "ready",
+      },
+      {
+        step_number: 2,
+        action: "Verify checklist and missing items",
+        detail: "Identify required documents, pending actions, and any hard submission deadlines.",
+        dependencies: [{ type: "step", description: "Portal access", step_ref: 1 }],
+        effort: "short",
+        delegation: "can_track",
+        suggested_date: null,
+        status: "pending",
+      },
+      {
+        step_number: 3,
+        action: "Capture next required action",
+        detail: "Record the exact next submission or follow-up needed from the portal status.",
+        dependencies: [{ type: "step", description: "Checklist verified", step_ref: 2 }],
+        effort: "short",
+        delegation: "user_only",
+        suggested_date: null,
+        status: "pending",
+      },
+    ];
+  }
+
+  if (task.domain === "financial" || text.includes("fafsa") || text.includes("aid")) {
+    return [
+      {
+        step_number: 1,
+        action: "Check FAFSA/aid status",
+        detail: "Confirm completion state and whether verification documents are requested.",
+        dependencies: [],
+        effort: "short",
+        delegation: "user_only",
+        suggested_date: null,
+        status: "ready",
+      },
+      {
+        step_number: 2,
+        action: "List required financial documents",
+        detail: "Create a checklist of all requested documents and missing fields.",
+        dependencies: [{ type: "step", description: "Status checked", step_ref: 1 }],
+        effort: "short",
+        delegation: "can_track",
+        suggested_date: null,
+        status: "pending",
+      },
+      {
+        step_number: 3,
+        action: "Set submission reminders",
+        detail: "Schedule escalating reminders ahead of the latest acceptable date.",
+        dependencies: [{ type: "step", description: "Requirements confirmed", step_ref: 2 }],
+        effort: "quick",
+        delegation: "can_remind",
+        suggested_date: nextDayIso(1),
+        status: "pending",
+      },
+    ];
+  }
+
+  if (task.domain === "job_application") {
+    return [
+      {
+        step_number: 1,
+        action: "Open job application status",
+        detail: "Review the application timeline and current hiring stage.",
+        dependencies: [],
+        effort: "quick",
+        delegation: "user_only",
+        suggested_date: null,
+        status: "ready",
+      },
+      {
+        step_number: 2,
+        action: "Draft targeted follow-up",
+        detail: "Prepare a concise follow-up email tailored to the role and timeline.",
+        dependencies: [{ type: "step", description: "Status reviewed", step_ref: 1 }],
+        effort: "short",
+        delegation: "can_draft",
+        suggested_date: null,
+        status: "pending",
+      },
+      {
+        step_number: 3,
+        action: "Send follow-up and track response",
+        detail: "Send the message and monitor for response within 3 business days.",
+        dependencies: [{ type: "step", description: "Draft completed", step_ref: 2 }],
+        effort: "quick",
+        delegation: "can_track",
+        suggested_date: nextDayIso(3),
+        status: "pending",
+      },
+    ];
+  }
+
+  return [
+    {
+      step_number: 1,
+      action: "Confirm task objective",
+      detail: `Define the exact output expected for: ${task.title}.`,
+      dependencies: [],
+      effort: "quick",
+      delegation: "user_only",
+      suggested_date: null,
+      status: "ready",
+    },
+    {
+      step_number: 2,
+      action: "Prepare first draft/checklist",
+      detail: "Generate a concrete first version to accelerate execution.",
+      dependencies: [{ type: "step", description: "Objective confirmed", step_ref: 1 }],
+      effort: "short",
+      delegation: "can_draft",
+      suggested_date: null,
+      status: "pending",
+    },
+    {
+      step_number: 3,
+      action: "Schedule follow-up checkpoint",
+      detail: "Set a reminder to review outcome and unblock next step.",
+      dependencies: [{ type: "step", description: "Initial output ready", step_ref: 2 }],
+      effort: "quick",
+      delegation: "can_remind",
+      suggested_date: nextDayIso(2),
+      status: "pending",
+    },
+  ];
 };
 
 export const fallbackInterpretation = (input: string): InterpretResponse => {
@@ -183,52 +399,39 @@ export const fallbackInterpretation = (input: string): InterpretResponse => {
 
 export const fallbackPlan = (task: TaskInterpretation): PlanResponse => {
   const planId = newId();
+  const steps = buildPlanSteps(task);
+  const deadline = extractDeadline(task);
+  const delegationSummary = steps.reduce(
+    (acc, step) => {
+      if (step.delegation === "can_draft") acc.can_draft += 1;
+      if (step.delegation === "can_remind") acc.can_remind += 1;
+      if (step.delegation === "can_track") acc.can_track += 1;
+      if (step.delegation === "user_only") acc.user_only += 1;
+      return acc;
+    },
+    { can_draft: 0, can_remind: 0, can_track: 0, user_only: 0 }
+  );
+
   return {
     task_id: task.task_id,
     title: task.title,
     plan_id: planId,
-    total_steps: 2,
-    estimated_total_effort: "short",
-    deadline: null,
-    steps: [
-      {
-        step_number: 1,
-        action: "Clarify missing details",
-        detail: "Collect the deadline, target system, and desired outcome.",
-        dependencies: [],
-        effort: "short",
-        delegation: "user_only",
-        suggested_date: null,
-        status: "pending",
-      },
-      {
-        step_number: 2,
-        action: "Confirm next actions",
-        detail: "Once details are clear, outline the specific steps.",
-        dependencies: [{ type: "information", description: "Clarified details", step_ref: null }],
-        effort: "short",
-        delegation: "user_only",
-        suggested_date: null,
-        status: "pending",
-      },
-    ],
+    total_steps: steps.length,
+    estimated_total_effort: steps.length >= 4 ? "medium" : "short",
+    deadline,
+    steps,
     risk_flags: [
       {
-        risk: "Insufficient detail to generate a reliable plan.",
-        severity: "low",
-        mitigation: "Collect missing details before planning.",
+        risk: "Required credentials or documents may be missing at execution time.",
+        severity: "medium",
+        mitigation: "Confirm account access and required documents before starting step 1.",
       },
     ],
     next_action: {
       step_number: 1,
-      action: "Clarify missing details",
-      why_first: "Planning requires a precise goal and deadline.",
+      action: steps[0]?.action ?? "Start first concrete action",
+      why_first: "This unlocks the rest of the plan and confirms current status.",
     },
-    delegation_summary: {
-      can_draft: 0,
-      can_remind: 0,
-      can_track: 0,
-      user_only: 2,
-    },
+    delegation_summary: delegationSummary,
   };
 };

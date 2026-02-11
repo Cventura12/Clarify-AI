@@ -47,11 +47,13 @@ const urgencyRank: Record<ThreadItem["urgency"], number> = {
 };
 
 const buildThread = (task: Task, requestId: string): ThreadItem => {
+  const isGenericTitle = task.title?.toLowerCase().includes("clarify request details");
+  const isGenericSummary = task.summary?.toLowerCase().includes("need more detail");
   const title =
-    task.title && task.title.toLowerCase() !== "clarify request details"
+    task.title && !isGenericTitle
       ? task.title
       : task.summary || "Untitled request";
-  const summary = task.summary?.trim() || "Awaiting next step";
+  const summary = !isGenericSummary ? task.summary?.trim() || "Awaiting next step" : "Awaiting next step";
   const compactSummary =
     summary.length > 120 ? `${summary.slice(0, 117).trim()}...` : summary;
   return {
@@ -101,10 +103,19 @@ export default async function DashboardPage() {
   });
 
   const tasks = requests.flatMap((request) =>
-    request.tasks.map((task) => ({ task, requestId: request.id }))
+    request.tasks.map((task) => ({ task, requestId: request.id, rawInput: request.rawInput }))
   );
 
-  const threads = tasks.map(({ task, requestId }) => buildThread(task, requestId));
+  const threads = tasks.map(({ task, requestId, rawInput }) => {
+    const thread = buildThread(task, requestId);
+    if (thread.title.toLowerCase().includes("need more detail")) {
+      return {
+        ...thread,
+        title: rawInput.length > 88 ? `${rawInput.slice(0, 85).trim()}...` : rawInput,
+      };
+    }
+    return thread;
+  });
   const hasThreads = threads.length > 0;
 
   const activeCount = threads.filter((item) => item.taskStatus !== "completed" && item.taskStatus !== "abandoned").length;
