@@ -50,60 +50,20 @@ const buildThread = (task: Task, requestId: string): ThreadItem => {
   const title =
     task.title && task.title.toLowerCase() !== "clarify request details"
       ? task.title
-      : task.summary ?? task.title;
+      : task.summary || "Untitled request";
+  const summary = task.summary?.trim() || "Awaiting next step";
+  const compactSummary =
+    summary.length > 120 ? `${summary.slice(0, 117).trim()}...` : summary;
   return {
     id: task.id,
-    title: title ?? "Untitled request",
-    summary: task.summary ?? "Awaiting next step",
+    title,
+    summary: compactSummary,
     urgency: (task.urgency ?? "low") as ThreadItem["urgency"],
     deadline: formatDeadline(task.dates),
     taskStatus: task.taskStatus,
     requestId,
   };
 };
-
-const fallbackThreads: ThreadItem[] = [
-  {
-    id: "fallback-1",
-    title: "NYU Tandon ED2 - Verify application portal",
-    summary: "Planned follow-up",
-    urgency: "critical",
-    deadline: "3d left",
-    taskStatus: "planned",
-  },
-  {
-    id: "fallback-2",
-    title: "Recommender follow-up - Confirm letter received",
-    summary: "Draft ready",
-    urgency: "critical",
-    deadline: "3d left",
-    taskStatus: "ready",
-  },
-  {
-    id: "fallback-3",
-    title: "AP Computer Science - Assignment submission",
-    summary: "Interpreted",
-    urgency: "high",
-    deadline: "Feb 14",
-    taskStatus: "interpreted",
-  },
-  {
-    id: "fallback-4",
-    title: "FAFSA verification - Check completion status",
-    summary: "Interpreted",
-    urgency: "high",
-    deadline: "Feb 20",
-    taskStatus: "interpreted",
-  },
-  {
-    id: "fallback-5",
-    title: "UIUC vs NYU - Compare financial aid packages",
-    summary: "Blocked",
-    urgency: "medium",
-    deadline: "Feb 28",
-    taskStatus: "blocked",
-  },
-];
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
@@ -144,9 +104,8 @@ export default async function DashboardPage() {
     request.tasks.map((task) => ({ task, requestId: request.id }))
   );
 
-  const threads = tasks.length
-    ? tasks.map(({ task, requestId }) => buildThread(task, requestId))
-    : fallbackThreads;
+  const threads = tasks.map(({ task, requestId }) => buildThread(task, requestId));
+  const hasThreads = threads.length > 0;
 
   const activeCount = threads.filter((item) => item.taskStatus !== "completed" && item.taskStatus !== "abandoned").length;
   const blockedCount = threads.filter((item) => item.taskStatus === "blocked").length;
@@ -213,6 +172,36 @@ export default async function DashboardPage() {
   const greeting =
     greetingHour < 12 ? "Good morning" : greetingHour < 18 ? "Good afternoon" : "Good evening";
 
+  if (!hasThreads) {
+    return (
+      <DashboardMotion>
+        <div className={styles.dashboard}>
+          <div className={`${styles.orb} ${styles.orbOne}`} data-motion="orb" />
+          <div className={`${styles.orb} ${styles.orbTwo}`} data-motion="orb" />
+          <section className={styles.headerRow}>
+            <div className={styles.greetingBlock}>
+              <p className={styles.greetingKicker}>Execution layer</p>
+              <h1 className={styles.greetingTitle}>
+                {greeting}, Caleb
+              </h1>
+            </div>
+          </section>
+
+          <section className={styles.commandRow}>
+            <CommandBar />
+          </section>
+
+          <section className={styles.emptyState}>
+            <p className={styles.emptyTitle}>Type your first request to get started.</p>
+            <p className={styles.emptyBody}>
+              Clarify will interpret your request, build a plan, then wait for your approval before execution.
+            </p>
+          </section>
+        </div>
+      </DashboardMotion>
+    );
+  }
+
   return (
     <DashboardMotion>
       <div className={styles.dashboard}>
@@ -269,32 +258,36 @@ export default async function DashboardPage() {
               </>
             ) : null}
 
-            <div className={styles.sectionHeaderRow}>
-              <p className={styles.sectionLabel}>Active threads</p>
-              <Link className={styles.sectionLink} href="/requests">View all</Link>
-            </div>
-            <div className={styles.threadList}>
-              {activeThreads.map((item) => (
-                <Link
-                  key={item.id}
-                  href={item.requestId ? `/request/${item.requestId}` : "/requests"}
-                  className={`${styles.threadItem} ${styles[`thread${item.urgency}`]}`}
-                >
-                  <div className={styles.threadContent}>
-                    <p className={styles.threadTitle}>{item.title}</p>
-                    <p className={styles.threadMeta}>
-                      <span className={styles.threadStatus}>{item.taskStatus}</span>
-                      <span className={styles.threadDot}>.</span>
-                      <span className={styles.threadSummary}>{item.summary}</span>
-                    </p>
-                  </div>
-                  <div className={styles.threadBadges}>
-                    <span className={styles.deadlineBadge}>{item.deadline}</span>
-                    <span className={`${styles.urgencyBadge} ${styles[`badge${item.urgency}`]}`}>{item.urgency}</span>
-                  </div>
-                </Link>
-              ))}
-            </div>
+            {activeThreads.length > 0 ? (
+              <>
+                <div className={styles.sectionHeaderRow}>
+                  <p className={styles.sectionLabel}>Active threads</p>
+                  <Link className={styles.sectionLink} href="/requests">View all</Link>
+                </div>
+                <div className={styles.threadList}>
+                  {activeThreads.map((item) => (
+                    <Link
+                      key={item.id}
+                      href={item.requestId ? `/request/${item.requestId}` : "/requests"}
+                      className={`${styles.threadItem} ${styles[`thread${item.urgency}`]}`}
+                    >
+                      <div className={styles.threadContent}>
+                        <p className={styles.threadTitle}>{item.title}</p>
+                        <p className={styles.threadMeta}>
+                          <span className={styles.threadStatus}>{item.taskStatus}</span>
+                          <span className={styles.threadDot}>.</span>
+                          <span className={styles.threadSummary}>{item.summary}</span>
+                        </p>
+                      </div>
+                      <div className={styles.threadBadges}>
+                        <span className={styles.deadlineBadge}>{item.deadline}</span>
+                        <span className={`${styles.urgencyBadge} ${styles[`badge${item.urgency}`]}`}>{item.urgency}</span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </>
+            ) : null}
           </div>
 
           <div className={styles.rightColumn}>

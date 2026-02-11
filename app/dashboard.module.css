@@ -119,6 +119,28 @@
   width: 100%;
 }
 
+.emptyState {
+  max-width: 860px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(180deg, rgba(20, 24, 33, 0.95), rgba(14, 18, 26, 0.98));
+  padding: 20px;
+}
+
+.emptyTitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.emptyBody {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+  max-width: 72ch;
+}
+
 .mainGrid {
   display: grid;
   gap: 24px;

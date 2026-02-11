@@ -18,12 +18,30 @@ const statusTone: Record<string, string> = {
   skipped: "bg-slate-200 text-slate-600",
 };
 
+const delegationLabel: Record<string, string> = {
+  can_draft: "Clarify can draft",
+  can_remind: "Clarify can remind",
+  can_track: "Clarify can track",
+  user_only: "Manual by you",
+};
+
 export default function PlanView({ plan }: { plan: Plan & { steps: Step[] } }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const riskFlags = asArray<{ risk: string; severity: string; mitigation: string }>(plan.riskFlags);
   const nextAction = plan.nextAction as { step_number: number; action: string; why_first: string } | null;
+  const delegationSummary = (plan.delegationSummary as {
+    can_draft?: number;
+    can_remind?: number;
+    can_track?: number;
+    user_only?: number;
+  } | null) ?? { can_draft: 0, can_remind: 0, can_track: 0, user_only: 0 };
+  const clarifyHandled =
+    (delegationSummary.can_draft ?? 0) +
+    (delegationSummary.can_remind ?? 0) +
+    (delegationSummary.can_track ?? 0);
+  const manualHandled = delegationSummary.user_only ?? 0;
   const authorizedCount = plan.steps.filter((step) => step.status === "authorized").length;
   const canRun = authorizedCount > 0;
 
@@ -33,7 +51,20 @@ export default function PlanView({ plan }: { plan: Plan & { steps: Step[] } }) {
       const response = await fetch(`/api/steps/${stepId}/authorize`, { method: "POST" });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) {
-        setError(data?.error?.message ?? "Failed to authorize step.");
+        setError(data?.error?.message ?? "Failed to approve step.");
+        return;
+      }
+      router.refresh();
+    });
+  };
+
+  const rejectStep = (stepId: string) => {
+    setError(null);
+    startTransition(async () => {
+      const response = await fetch(`/api/steps/${stepId}/reject`, { method: "POST" });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setError(data?.error?.message ?? "Failed to reject step.");
         return;
       }
       router.refresh();
@@ -72,7 +103,7 @@ export default function PlanView({ plan }: { plan: Plan & { steps: Step[] } }) {
         <div>
           <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Plan</p>
           <p className="text-sm text-slate-600">
-            {plan.totalSteps} steps · {plan.estimatedTotalEffort}
+            {plan.totalSteps} steps - {plan.estimatedTotalEffort}
           </p>
         </div>
         <ConfidenceBadge score={plan.confidenceScore} />
@@ -86,7 +117,7 @@ export default function PlanView({ plan }: { plan: Plan & { steps: Step[] } }) {
               : "border border-[#e6e4e1] bg-slate-50 text-slate-400"
           }`}
         >
-          {isPending ? "Running" : `Run ${authorizedCount} authorized`}
+          {isPending ? "Running" : `Run ${authorizedCount} approved`}
         </button>
         {plan.deadline ? (
           <p className="text-xs text-slate-400">
@@ -95,10 +126,21 @@ export default function PlanView({ plan }: { plan: Plan & { steps: Step[] } }) {
         ) : null}
       </div>
 
+      <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+        <span className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 font-medium text-sky-700">
+          Clarify-handled: {clarifyHandled}
+        </span>
+        <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 font-medium text-slate-700">
+          Manual: {manualHandled}
+        </span>
+      </div>
+
       {nextAction ? (
         <div className="mt-3 rounded-lg border border-[#ebe8e3] bg-white p-3 text-sm text-slate-600">
           <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Next action</p>
-          <p className="mt-1">Step {nextAction.step_number}: {nextAction.action}</p>
+          <p className="mt-1">
+            Step {nextAction.step_number}: {nextAction.action}
+          </p>
           <p className="mt-1 text-xs text-slate-400">{nextAction.why_first}</p>
         </div>
       ) : null}
@@ -117,31 +159,55 @@ export default function PlanView({ plan }: { plan: Plan & { steps: Step[] } }) {
             <p className="mt-2 text-sm text-slate-500">{step.detail}</p>
             <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
               <div className="flex items-center gap-2">
-                <span>Delegation: {step.delegation}</span>
-                <span className={`rounded-full px-2 py-1 ${statusTone[step.status] ?? "bg-slate-100 text-slate-600"}`}>
+                <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] text-slate-600">
+                  {delegationLabel[step.delegation] ?? step.delegation}
+                </span>
+                <span
+                  className={`rounded-full px-2 py-1 ${statusTone[step.status] ?? "bg-slate-100 text-slate-600"}`}
+                >
                   {step.status}
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 {step.status === "pending" || step.status === "ready" ? (
-                  <button
-                    type="button"
-                    onClick={() => authorizeStep(step.id)}
-                    disabled={isPending}
-                    className="rounded-full border border-[#d8d4cf] bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500"
-                  >
-                    Authorize
-                  </button>
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => authorizeStep(step.id)}
+                      disabled={isPending}
+                      className="rounded-full border border-[#d8d4cf] bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500"
+                    >
+                      Approve
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => rejectStep(step.id)}
+                      disabled={isPending}
+                      className="rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-rose-700"
+                    >
+                      Reject
+                    </button>
+                  </>
                 ) : null}
                 {step.status === "authorized" ? (
-                  <button
-                    type="button"
-                    onClick={() => executeStep(step.id)}
-                    disabled={isPending}
-                    className="rounded-full bg-slate-900 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-white"
-                  >
-                    Execute
-                  </button>
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => executeStep(step.id)}
+                      disabled={isPending}
+                      className="rounded-full bg-slate-900 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-white"
+                    >
+                      Execute
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => rejectStep(step.id)}
+                      disabled={isPending}
+                      className="rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-rose-700"
+                    >
+                      Reject
+                    </button>
+                  </>
                 ) : null}
                 {step.status === "done" && step.outcome ? (
                   <span className="text-xs text-slate-500">{step.outcome}</span>

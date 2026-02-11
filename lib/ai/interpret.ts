@@ -15,16 +15,180 @@ export type AIError = {
   issues?: unknown;
 };
 
-const SYSTEM_PROMPT = `You are Clarify's interpretation engine. Return only JSON matching the schema.
+const SYSTEM_PROMPT = `You are the interpretation engine for Clarify, a personal execution layer.
 
-Steps:
-1) Decompose into distinct tasks.
-2) Classify domain, urgency, complexity (use provided enums).
-3) Extract entities, dates, amounts, statuses.
-4) Flag ambiguities with why they matter. Do not assume.
-5) Surface hidden dependencies.
+Your job is to take a raw, messy human request and return a structured interpretation. You do NOT plan. You do NOT act. You only interpret.
 
-Return JSON only, no extra text.`;
+When you receive a request, do the following:
+
+1) DECOMPOSE: Separate distinct tasks. Each task gets its own interpretation object.
+2) CLASSIFY:
+ - domain: follow_up | portal | job_application | scholarship | academic | financial | medical | legal | housing | other
+ - urgency: critical | high | medium | low
+ - complexity: simple | moderate | complex
+3) EXTRACT: entities, dates, statuses.
+4) FLAG AMBIGUITIES: identify missing info and why it matters. Do not guess.
+5) SURFACE HIDDEN DEPENDENCIES: include likely blockers user did not mention.
+
+Rules:
+- Return JSON only. No markdown.
+- Each task must have a specific, real title (never generic placeholders).
+- Preserve raw_input exactly.
+- Use null for unknown dates.
+- If no cross-task links, return an empty array.`;
+
+const DOMAIN_VALUES = new Set([
+  "follow_up",
+  "portal",
+  "job_application",
+  "scholarship",
+  "academic",
+  "financial",
+  "medical",
+  "legal",
+  "housing",
+  "other",
+]);
+
+const URGENCY_VALUES = new Set(["critical", "high", "medium", "low"]);
+const COMPLEXITY_VALUES = new Set(["simple", "moderate", "complex"]);
+const ENTITY_VALUES = new Set(["organization", "person", "portal", "platform", "document"]);
+const DATE_SOURCE_VALUES = new Set(["stated", "inferred", "unknown"]);
+const RELATION_VALUES = new Set(["blocks", "informs", "shares_deadline"]);
+
+const asRecord = (value: unknown): Record<string, unknown> =>
+  value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
+
+const asString = (value: unknown, fallback = ""): string =>
+  typeof value === "string" ? value : fallback;
+
+const normalizeEnum = <T extends string>(value: unknown, allowed: Set<T>, fallback: T): T => {
+  const candidate = typeof value === "string" ? (value.trim().toLowerCase() as T) : fallback;
+  return allowed.has(candidate) ? candidate : fallback;
+};
+
+const normalizeDates = (value: unknown) => {
+  if (!Array.isArray(value)) return [];
+  return value.map((item) => {
+    const record = asRecord(item);
+    const rawDate = record.date;
+    return {
+      description: asString(record.description, "Potential deadline"),
+      date: typeof rawDate === "string" ? rawDate : null,
+      source: normalizeEnum(record.source, DATE_SOURCE_VALUES, "unknown"),
+    };
+  });
+};
+
+const normalizeStatus = (value: unknown) => {
+  const record = asRecord(value);
+  return {
+    what_is_done: asString(record.what_is_done, "No confirmed actions yet."),
+    what_is_pending: asString(record.what_is_pending, "Clarify remaining actions."),
+    blockers: Array.isArray(record.blockers)
+      ? record.blockers.filter((item): item is string => typeof item === "string")
+      : [],
+  };
+};
+
+const normalizeTasks = (value: unknown, input: string) => {
+  if (!Array.isArray(value)) return [];
+  return value.map((item, index) => {
+    const record = asRecord(item);
+    const hiddenDependencies = record.hidden_dependencies ?? record.hiddenDependencies;
+
+    return {
+      task_id:
+        asString(record.task_id) ||
+        asString(record.taskId) ||
+        asString(record.id) ||
+        `task_${index + 1}_${crypto.randomUUID()}`,
+      title:
+        asString(record.title).trim() ||
+        asString(record.summary).trim() ||
+        asString(record.action).trim() ||
+        `Task ${index + 1}: ${input.slice(0, 60).trim()}`,
+      summary:
+        asString(record.summary).trim() ||
+        asString(record.title).trim() ||
+        input,
+      domain: normalizeEnum(record.domain, DOMAIN_VALUES, "other"),
+      urgency: normalizeEnum(record.urgency, URGENCY_VALUES, "medium"),
+      complexity: normalizeEnum(record.complexity, COMPLEXITY_VALUES, "moderate"),
+      entities: Array.isArray(record.entities)
+        ? record.entities.map((entity) => {
+            const entityRecord = asRecord(entity);
+            return {
+              name: asString(entityRecord.name, "Unknown"),
+              type: normalizeEnum(entityRecord.type, ENTITY_VALUES, "organization"),
+            };
+          })
+        : [],
+      dates: normalizeDates(record.dates),
+      status: normalizeStatus(record.status),
+      ambiguities: Array.isArray(record.ambiguities)
+        ? record.ambiguities.map((ambiguity) => {
+            const ambiguityRecord = asRecord(ambiguity);
+            return {
+              question: asString(ambiguityRecord.question, "What detail is still missing?"),
+              why_it_matters: asString(
+                ambiguityRecord.why_it_matters,
+                "Missing details can block execution."
+              ),
+              default_assumption:
+                typeof ambiguityRecord.default_assumption === "string"
+                  ? ambiguityRecord.default_assumption
+                  : null,
+            };
+          })
+        : [],
+      hidden_dependencies: Array.isArray(hiddenDependencies)
+        ? hiddenDependencies.map((dependency) => {
+            const dependencyRecord = asRecord(dependency);
+            return {
+              insight: asString(dependencyRecord.insight, "Potential dependency not confirmed."),
+              risk_if_ignored: asString(
+                dependencyRecord.risk_if_ignored,
+                "Could delay completion."
+              ),
+            };
+          })
+        : [],
+    };
+  });
+};
+
+const normalizeInterpretation = (value: unknown, input: string): unknown => {
+  const record = asRecord(value);
+  const tasks = normalizeTasks(record.tasks, input);
+
+  return {
+    raw_input: asString(record.raw_input, input),
+    request_count:
+      typeof record.request_count === "number"
+        ? record.request_count
+        : tasks.length > 0
+          ? tasks.length
+          : 1,
+    tasks,
+    cross_task_dependencies: Array.isArray(record.cross_task_dependencies)
+      ? record.cross_task_dependencies.map((dependency) => {
+          const dependencyRecord = asRecord(dependency);
+          return {
+            from_task: asString(dependencyRecord.from_task),
+            to_task: asString(dependencyRecord.to_task),
+            relationship: normalizeEnum(
+              dependencyRecord.relationship,
+              RELATION_VALUES,
+              "informs"
+            ),
+          };
+        })
+      : [],
+  };
+};
 
 const parseJsonFromText = (text: string) => {
   const trimmed = text.trim();
@@ -87,7 +251,8 @@ export async function interpretInput(
       };
     }
 
-    const parsed = InterpretResponseSchema.safeParse(parsedJson);
+    const normalized = normalizeInterpretation(parsedJson, input);
+    const parsed = InterpretResponseSchema.safeParse(normalized);
     if (!parsed.success) {
       console.error("Interpret validation error", parsed.error.flatten(), rawText);
       return {
@@ -96,6 +261,22 @@ export async function interpretInput(
           type: "validation",
           raw: rawText,
           issues: parsed.error.flatten(),
+        },
+      };
+    }
+
+    const hasRealTask = parsed.data.tasks.some(
+      (task) =>
+        task.title.trim().length > 8 &&
+        !task.title.toLowerCase().includes("clarify request details")
+    );
+
+    if (!hasRealTask) {
+      return {
+        error: {
+          message: "AI response was too generic",
+          type: "validation",
+          raw: rawText,
         },
       };
     }
