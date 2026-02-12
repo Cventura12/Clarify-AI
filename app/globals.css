@@ -34,9 +34,9 @@ html.dark {
   --surface-soft: #13161b;
   --border: rgba(148, 163, 184, 0.18);
   --border-strong: rgba(148, 163, 184, 0.28);
-  --text: #e6e6e6;
-  --muted: #9aa3ad;
-  --kicker: #707a89;
+  --text: #f1f5fb;
+  --muted: #b2bdcc;
+  --kicker: #8d99aa;
   --accent: #2dd4bf;
   --accent-2: #22d3ee;
   --accent-warm: #f59e0b;
