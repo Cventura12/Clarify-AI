@@ -3,12 +3,14 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 import gsap from "gsap";
+import { VoiceButton } from "@/components/VoiceButton";
 import styles from "./CommandBar.module.css";
 
 export default function CommandBar() {
   const router = useRouter();
   const [input, setInput] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [voiceListening, setVoiceListening] = useState(false);
   const [isPending, startTransition] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -95,7 +97,10 @@ export default function CommandBar() {
       </div>
 
       <div className={styles.commandActions}>
-        <span className={styles.commandFlow}>interpret -&gt; plan -&gt; authorize</span>
+        <div className={styles.commandAssist}>
+          <VoiceButton onTranscript={setInput} onListeningChange={setVoiceListening} />
+          <span className={styles.commandFlow}>interpret -&gt; plan -&gt; authorize</span>
+        </div>
         <button type="submit" disabled={isPending} className={styles.commandButton}>
           {isPending ? "Clarifying" : "Clarify"}
           <svg viewBox="0 0 24 24" className={styles.commandButtonIcon} fill="none" stroke="currentColor" strokeWidth="2">
@@ -105,6 +110,9 @@ export default function CommandBar() {
         </button>
       </div>
 
+      {voiceListening ? (
+        <p className={styles.commandLive}>{input ? input : "Listening... Speak your request."}</p>
+      ) : null}
       {error ? <p className={styles.commandError}>{error}</p> : null}
     </form>
   );

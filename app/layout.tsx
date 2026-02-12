@@ -1,6 +1,7 @@
 import "./globals.css";
 import type { ReactNode } from "react";
 import Sidebar from "@/components/Sidebar";
+import PwaRegister from "@/components/PwaRegister";
 import { Manrope, Sora } from "next/font/google";
 
 const display = Sora({
@@ -18,12 +19,14 @@ const body = Manrope({
 export const metadata = {
   title: "Clarify AI",
   description: "Personal execution layer",
+  manifest: "/manifest.webmanifest",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={`${body.variable} ${display.variable}`}>
       <body className="min-h-screen bg-[var(--app-bg)] font-body text-[var(--text)] antialiased">
+        <PwaRegister />
         <div className="flex min-h-screen flex-col lg:flex-row">
           <Sidebar />
           <main className="relative flex-1 overflow-hidden bg-[var(--app-main-bg)]">
