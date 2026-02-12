@@ -209,6 +209,19 @@
   gap: 8px;
 }
 
+.requestFilterBar {
+  position: sticky;
+  top: 8px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  background: linear-gradient(180deg, rgba(9, 13, 20, 0.92), rgba(9, 13, 20, 0.72));
+  backdrop-filter: blur(4px);
+}
+
 .filterPill {
   border-radius: 999px;
   padding: 6px 14px;
@@ -250,36 +263,6 @@
   gap: 14px;
 }
 
-.requestActionsRow {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 2px;
-}
-
-.clearAllButton {
-  border-radius: 10px;
-  border: 1px solid rgba(148, 163, 184, 0.3);
-  background: transparent;
-  min-height: 50px;
-  min-width: 126px;
-  padding: 10px 18px;
-  font-size: 14px;
-  font-weight: 600;
-  color: #fb7185;
-  line-height: 1;
-  transition: border-color 0.2s ease, background-color 0.2s ease;
-}
-
-.clearAllButton:hover {
-  border-color: rgba(148, 163, 184, 0.5);
-  background: rgba(148, 163, 184, 0.08);
-}
-
-.clearAllButton:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 .requestCard {
   display: block;
   border-radius: 14px;
@@ -289,6 +272,11 @@
   border-left-width: 6px;
   border-left-color: #35d2c3;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.requestCardCompact {
+  padding-top: 12px;
+  padding-bottom: 12px;
 }
 
 .requestCard:hover {
@@ -389,6 +377,10 @@
   min-width: 0;
 }
 
+.requestMetaLineCompact {
+  gap: 6px;
+}
+
 .requestDot {
   color: var(--muted);
   opacity: 0.8;
@@ -406,8 +398,23 @@
 .requestStatus {
   font-size: 12px;
   text-transform: capitalize;
-  color: #34d399;
   font-weight: 600;
+}
+
+.requestStatusActive {
+  color: #34d399;
+}
+
+.requestStatusAction {
+  color: #fbbf24;
+}
+
+.requestStatusBlocked {
+  color: #fb7185;
+}
+
+.requestStatusIdle {
+  color: #94a3b8;
 }
 
 .requestDeleteButton {
@@ -487,12 +494,5 @@
 
   .requestCardTitle {
     font-size: 17px;
-  }
-
-  .clearAllButton {
-    font-size: 14px;
-    padding: 8px 14px;
-    min-height: 42px;
-    min-width: 104px;
   }
 }

@@ -20,19 +20,14 @@ export default function DashboardRequestList({ threads }: { threads: ThreadItem[
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
-  const clearAll = () => {
-    const confirmed = window.confirm("Clear all requests?");
-    if (!confirmed) return;
-    setError(null);
-    startTransition(async () => {
-      const response = await fetch("/api/requests", { method: "DELETE" });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        setError(data?.error?.message ?? "Failed to clear requests.");
-        return;
-      }
-      router.refresh();
-    });
+  const statusTone = (value: string) => {
+    const normalized = value.toLowerCase();
+    if (["blocked", "error", "failed"].includes(normalized)) return styles.requestStatusBlocked;
+    if (["completed", "abandoned", "done", "archived"].includes(normalized)) return styles.requestStatusIdle;
+    if (["planned", "pending", "authorized", "needs_clarification"].includes(normalized)) {
+      return styles.requestStatusAction;
+    }
+    return styles.requestStatusActive;
   };
 
   const deleteOne = (requestId: string) => {
@@ -52,29 +47,23 @@ export default function DashboardRequestList({ threads }: { threads: ThreadItem[
 
   return (
     <>
-      <div className={styles.requestActionsRow}>
-        <button
-          type="button"
-          onClick={clearAll}
-          disabled={isPending || threads.length === 0}
-          className={styles.clearAllButton}
-        >
-          Clear All
-        </button>
-      </div>
-
       <div className={styles.requestGrid}>
-        {threads.map((item) => {
+        {threads.map((item, index) => {
           const target = item.requestId ? `/request/${item.requestId}` : "/requests";
+          const compact = index > 0;
           return (
-            <article key={item.id} data-motion="card" className={styles.requestCard}>
+            <article
+              key={item.id}
+              data-motion="card"
+              className={`${styles.requestCard} ${compact ? styles.requestCardCompact : ""}`}
+            >
               <div className={styles.requestCardBody}>
                 <div className={styles.requestCardMain}>
                   <Link href={target} className={styles.requestTitleLink}>
                     <p className={styles.requestCardTitle}>{item.title}</p>
                   </Link>
-                  <p className={styles.requestMetaLine}>
-                    <span className={styles.requestStatus}>{item.taskStatus}</span>
+                  <p className={`${styles.requestMetaLine} ${compact ? styles.requestMetaLineCompact : ""}`}>
+                    <span className={`${styles.requestStatus} ${statusTone(item.taskStatus)}`}>{item.taskStatus}</span>
                     <span className={styles.requestDot}>.</span>
                     <span className={styles.requestMetaText}>{item.summary || "Awaiting next step"}</span>
                   </p>

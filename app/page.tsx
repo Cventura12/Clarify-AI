@@ -235,18 +235,20 @@ export default async function DashboardPage({
                 <p className={styles.requestSubtitle}>Track every request and its current status.</p>
               </div>
 
-              <div className={styles.requestFilters}>
-                {dashboardViews.map((view) => (
-                  <Link
-                    key={view.value}
-                    href={view.value === "all" ? "/" : `/?view=${view.value}`}
-                    className={`${styles.filterPill} ${
-                      currentView === view.value ? styles.filterPillActive : styles.filterPillIdle
-                    }`}
-                  >
-                    {view.label}
-                  </Link>
-                ))}
+              <div className={styles.requestFilterBar}>
+                <div className={styles.requestFilters}>
+                  {dashboardViews.map((view) => (
+                    <Link
+                      key={view.value}
+                      href={view.value === "all" ? "/" : `/?view=${view.value}`}
+                      className={`${styles.filterPill} ${
+                        currentView === view.value ? styles.filterPillActive : styles.filterPillIdle
+                      }`}
+                    >
+                      {view.label}
+                    </Link>
+                  ))}
+                </div>
               </div>
 
               {visibleThreads.length === 0 ? (

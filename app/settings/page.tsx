@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { authOptions } from "@/lib/auth";
 import RunStatsCard from "@/components/RunStatsCard";
+import HoldToClearRequestsButton from "@/components/HoldToClearRequestsButton";
 import { getServerSession } from "next-auth";
 
 const baseSections = [
@@ -127,6 +128,19 @@ export default async function SettingsPage() {
             </div>
           </div>
         ))}
+
+        <div className="rounded-2xl border border-rose-400/20 bg-rose-500/5 p-5 shadow-[var(--shadow)]">
+          <div className="flex items-center justify-between">
+            <p className="text-xs uppercase tracking-[0.3em] text-rose-300/80">Danger Zone</p>
+            <span className="text-xs text-rose-200/70">Requests cleanup</span>
+          </div>
+          <p className="mt-2 text-sm text-[var(--muted)]">
+            Cleanup controls are intentionally placed here to avoid accidental destructive actions in the requests feed.
+          </p>
+          <div className="mt-4">
+            <HoldToClearRequestsButton scope="completed" />
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -93,25 +93,27 @@ export default async function RequestsPage({
         <p className="text-sm text-[var(--muted)]">Track every request and its current status.</p>
       </header>
 
-      <div className="flex flex-wrap gap-2 text-xs">
-        {[
-          { label: "All", value: "all" },
-          { label: "Active", value: "active" },
-          { label: "Blocked", value: "blocked" },
-          { label: "Completed", value: "completed" },
-        ].map((tab) => (
-          <Link
-            key={tab.value}
-            href={`/requests?view=${tab.value}`}
-            className={`rounded-full px-3 py-1 font-semibold uppercase tracking-[0.2em] ${
-              view === tab.value
-                ? "bg-[var(--text)] text-[var(--surface)]"
-                : "border border-[var(--border)] bg-[var(--surface)] text-[var(--muted)]"
-            }`}
-          >
-            {tab.label}
-          </Link>
-        ))}
+      <div className="sticky top-2 z-10 rounded-xl bg-[var(--app-main-bg)]/85 py-1 backdrop-blur">
+        <div className="flex flex-wrap gap-2 text-xs">
+          {[
+            { label: "All", value: "all" },
+            { label: "Active", value: "active" },
+            { label: "Blocked", value: "blocked" },
+            { label: "Completed", value: "completed" },
+          ].map((tab) => (
+            <Link
+              key={tab.value}
+              href={`/requests?view=${tab.value}`}
+              className={`rounded-full px-3 py-1 font-semibold uppercase tracking-[0.2em] ${
+                view === tab.value
+                  ? "bg-[var(--text)] text-[var(--surface)]"
+                  : "border border-[var(--border)] bg-[var(--surface)] text-[var(--muted)]"
+              }`}
+            >
+              {tab.label}
+            </Link>
+          ))}
+        </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">

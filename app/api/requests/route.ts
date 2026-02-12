@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { authOptions } from "@/lib/auth";
 import { getServerSession } from "next-auth";
+import type { Prisma } from "@prisma/client";
 
 export async function GET() {
   try {
@@ -60,7 +61,7 @@ export async function POST(request: Request) {
   }
 }
 
-export async function DELETE() {
+export async function DELETE(request: Request) {
   try {
     const session = await getServerSession(authOptions);
     const userId = session?.user?.id;
@@ -68,11 +69,22 @@ export async function DELETE() {
       return Response.json({ error: { message: "Unauthorized" } }, { status: 401 });
     }
 
-    const deleted = await prisma.request.deleteMany({
-      where: { userId },
-    });
+    const scope = new URL(request.url).searchParams.get("scope");
 
-    return Response.json({ deletedCount: deleted.count });
+    const where: Prisma.RequestWhereInput =
+      scope === "completed"
+        ? {
+            userId,
+            tasks: {
+              some: {},
+              every: { taskStatus: { in: ["completed", "abandoned"] } },
+            },
+          }
+        : { userId };
+
+    const deleted = await prisma.request.deleteMany({ where });
+
+    return Response.json({ deletedCount: deleted.count, scope: scope ?? "all" });
   } catch (error) {
     console.error("Requests DELETE error", error);
     return Response.json({ error: { message: "Failed to delete requests" } }, { status: 500 });
