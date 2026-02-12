@@ -258,7 +258,7 @@ export default function Sidebar() {
 
       <aside
         ref={sidebarRef}
-        className={`fixed inset-y-0 left-0 z-50 w-60 transform border-r border-white/10 bg-gradient-to-b from-[#161820] via-[#11131a] to-[#0d0f14] text-white transition lg:static lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 w-56 transform border-r border-white/10 bg-gradient-to-b from-[#141822] via-[#11141d] to-[#0d1118] text-white transition lg:static lg:translate-x-0 ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -329,29 +329,29 @@ export default function Sidebar() {
 
             <ThemeToggle />
 
-            <div>
+            <div className="rounded-xl border border-white/10 bg-white/[0.03] p-2.5">
               <p className="text-[10px] uppercase tracking-[0.28em] text-white/45">Connection health</p>
-              <div className="mt-2 space-y-1.5 text-xs">
-                <div className="flex items-center justify-between rounded-lg border border-emerald-400/25 bg-emerald-400/10 px-2.5 py-1.5">
+              <div className="mt-2 space-y-1.5 text-[11px]">
+                <div className="flex items-center justify-between px-1">
                   <span className="inline-flex items-center gap-2 text-emerald-200">
-                    <span className="h-2 w-2 rounded-full bg-emerald-300" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
                     Gmail
                   </span>
-                  <span className="text-emerald-300">Live</span>
+                  <span className="text-emerald-300">live</span>
                 </div>
-                <div className="flex items-center justify-between rounded-lg border border-emerald-400/25 bg-emerald-400/10 px-2.5 py-1.5">
+                <div className="flex items-center justify-between px-1">
                   <span className="inline-flex items-center gap-2 text-emerald-200">
-                    <span className="h-2 w-2 rounded-full bg-emerald-300" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
                     Calendar
                   </span>
-                  <span className="text-emerald-300">Live</span>
+                  <span className="text-emerald-300">live</span>
                 </div>
-                <div className="flex items-center justify-between rounded-lg border border-white/15 bg-white/5 px-2.5 py-1.5">
+                <div className="flex items-center justify-between px-1">
                   <span className="inline-flex items-center gap-2 text-white/75">
-                    <span className="h-2 w-2 rounded-full bg-slate-400" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-slate-400" />
                     Notion
                   </span>
-                  <span className="text-white/55">Pending</span>
+                  <span className="text-white/55">pending</span>
                 </div>
               </div>
             </div>
