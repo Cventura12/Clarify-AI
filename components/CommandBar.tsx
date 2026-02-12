@@ -79,7 +79,7 @@ export default function CommandBar() {
   };
 
   return (
-    <form ref={formRef} onSubmit={handleSubmit} className={styles.command}>
+    <form ref={formRef} onSubmit={handleSubmit} className={`${styles.command} ${styles.commandReady}`}>
       <div className={styles.commandInputRow}>
         <span className={styles.commandSpark}>
           <svg viewBox="0 0 24 24" className={styles.commandSparkIcon} fill="none" stroke="currentColor" strokeWidth="1.6">
@@ -98,7 +98,11 @@ export default function CommandBar() {
 
       <div className={styles.commandActions}>
         <div className={styles.commandAssist}>
-          <VoiceButton onTranscript={setInput} onListeningChange={setVoiceListening} />
+          <VoiceButton
+            onTranscript={setInput}
+            onListeningChange={setVoiceListening}
+            className={styles.commandVoiceButton}
+          />
           <span className={styles.commandFlow}>interpret -&gt; plan -&gt; authorize</span>
         </div>
         <button type="submit" disabled={isPending} className={styles.commandButton}>

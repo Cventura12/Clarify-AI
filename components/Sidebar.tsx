@@ -6,10 +6,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import gsap from "gsap";
 import ThemeToggle from "./ThemeToggle";
 
-const navItems = [
+const workflowItems = [
   { label: "Dashboard", href: "/", icon: "grid" },
   { label: "Requests", href: "/requests", icon: "list" },
   { label: "Integrations", href: "/integrations", icon: "plug" },
+];
+
+const utilityItems = [
   { label: "Settings", href: "/settings", icon: "settings" },
 ];
 
@@ -144,9 +147,18 @@ export default function Sidebar() {
   const isReducedMotion =
     typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  const items = useMemo(
+  const workflow = useMemo(
     () =>
-      navItems.map((item) => ({
+      workflowItems.map((item) => ({
+        ...item,
+        isActive: item.href === "/" ? pathname === "/" : pathname.startsWith(item.href),
+      })),
+    [pathname]
+  );
+
+  const utility = useMemo(
+    () =>
+      utilityItems.map((item) => ({
         ...item,
         isActive: item.href === "/" ? pathname === "/" : pathname.startsWith(item.href),
       })),
@@ -246,7 +258,7 @@ export default function Sidebar() {
 
       <aside
         ref={sidebarRef}
-        className={`fixed inset-y-0 left-0 z-50 w-64 transform border-r border-white/10 bg-gradient-to-b from-[#1a1b21] via-[#14151a] to-[#0f1014] text-white transition lg:static lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 w-60 transform border-r border-white/10 bg-gradient-to-b from-[#161820] via-[#11131a] to-[#0d0f14] text-white transition lg:static lg:translate-x-0 ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -276,15 +288,16 @@ export default function Sidebar() {
         </button>
 
         <nav ref={navRef} className="flex flex-col gap-1 px-4 py-6 text-sm">
-          {items.map((item) => (
+          <p className="px-3 pb-2 text-[10px] uppercase tracking-[0.28em] text-white/45">Workflow</p>
+          {workflow.map((item) => (
             <Link
               key={item.label}
               href={item.href}
               data-nav-item
               className={`flex items-center gap-3 rounded-xl border border-transparent px-3 py-2.5 transition ${
                 item.isActive
-                  ? "border-white/30 bg-white/20 text-white shadow-[0_10px_24px_rgba(10,10,10,0.4)]"
-                  : "text-white/80 hover:border-white/20 hover:bg-white/10 hover:text-white"
+                  ? "border-white/25 bg-white/18 text-white shadow-[0_10px_22px_rgba(8,8,8,0.36)]"
+                  : "text-white/78 hover:border-white/20 hover:bg-white/10 hover:text-white"
               }`}
             >
               <Icon name={item.icon} />
@@ -293,16 +306,55 @@ export default function Sidebar() {
           ))}
         </nav>
 
-        <div className="px-4 pb-6">
-          <ThemeToggle />
-        </div>
+        <div className="mt-auto border-t border-white/10 px-4 py-4">
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <p className="px-3 text-[10px] uppercase tracking-[0.28em] text-white/45">System</p>
+              {utility.map((item) => (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  data-nav-item
+                  className={`flex items-center gap-3 rounded-xl border border-transparent px-3 py-2.5 text-sm transition ${
+                    item.isActive
+                      ? "border-white/25 bg-white/16 text-white"
+                      : "text-white/72 hover:border-white/20 hover:bg-white/10 hover:text-white"
+                  }`}
+                >
+                  <Icon name={item.icon} />
+                  <span className="font-medium">{item.label}</span>
+                </Link>
+              ))}
+            </div>
 
-        <div className="mt-auto border-t border-white/10 p-4">
-          <p className="text-[10px] uppercase tracking-[0.3em] text-white/40">Connected</p>
-          <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-emerald-300">
-            <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-1">Gmail</span>
-            <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-1">Calendar</span>
-            <span className="rounded-full border border-white/15 bg-white/10 px-2 py-1 text-white/60">Notion</span>
+            <ThemeToggle />
+
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.28em] text-white/45">Connection health</p>
+              <div className="mt-2 space-y-1.5 text-xs">
+                <div className="flex items-center justify-between rounded-lg border border-emerald-400/25 bg-emerald-400/10 px-2.5 py-1.5">
+                  <span className="inline-flex items-center gap-2 text-emerald-200">
+                    <span className="h-2 w-2 rounded-full bg-emerald-300" />
+                    Gmail
+                  </span>
+                  <span className="text-emerald-300">Live</span>
+                </div>
+                <div className="flex items-center justify-between rounded-lg border border-emerald-400/25 bg-emerald-400/10 px-2.5 py-1.5">
+                  <span className="inline-flex items-center gap-2 text-emerald-200">
+                    <span className="h-2 w-2 rounded-full bg-emerald-300" />
+                    Calendar
+                  </span>
+                  <span className="text-emerald-300">Live</span>
+                </div>
+                <div className="flex items-center justify-between rounded-lg border border-white/15 bg-white/5 px-2.5 py-1.5">
+                  <span className="inline-flex items-center gap-2 text-white/75">
+                    <span className="h-2 w-2 rounded-full bg-slate-400" />
+                    Notion
+                  </span>
+                  <span className="text-white/55">Pending</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </aside>

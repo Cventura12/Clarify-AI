@@ -3,9 +3,7 @@ import { redirect } from "next/navigation";
 import CommandBar from "@/components/CommandBar";
 import DashboardRequestList from "@/components/DashboardRequestList";
 import DashboardMotion from "@/components/DashboardMotion";
-import NotificationPanel from "@/components/NotificationPanel";
 import styles from "./dashboard.module.css";
-import { getFollowUpSuggestions, getScheduledFollowUps } from "@/lib/communications/followups";
 import { prisma } from "@/lib/db";
 import { authOptions } from "@/lib/auth";
 import type { Task } from "@prisma/client";
@@ -135,6 +133,26 @@ export default async function DashboardPage({
   });
 
   const hasThreads = threads.length > 0;
+  const activeCount = threads.filter(
+    (item) => item.taskStatus !== "completed" && item.taskStatus !== "abandoned"
+  ).length;
+  const blockedCount = threads.filter((item) => item.taskStatus === "blocked").length;
+
+  const nextDeadlineTs = tasks
+    .flatMap(({ task }) => asArray<{ date: string | null }>(task.dates as JsonValue))
+    .map((item) => (item.date ? new Date(item.date) : null))
+    .filter((item): item is Date => item instanceof Date && !Number.isNaN(item.getTime()))
+    .map((item) => item.getTime())
+    .sort((a, b) => a - b)[0];
+
+  const nextDeadlineLabel = nextDeadlineTs
+    ? new Date(nextDeadlineTs).toLocaleString(undefined, {
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+      })
+    : "No deadline";
 
   const sortedThreads = [...threads].sort((a, b) => {
     if (a.taskStatus === "blocked" && b.taskStatus !== "blocked") return -1;
@@ -143,40 +161,6 @@ export default async function DashboardPage({
   });
 
   const visibleThreads = filterThreadsByView(currentView, sortedThreads);
-
-  const scheduledLogs = await prisma.executionLog.findMany({
-    where: {
-      action: "Follow-up scheduled",
-      step: {
-        plan: {
-          task: {
-            request: {
-              userId,
-            },
-          },
-        },
-      },
-    },
-    orderBy: { createdAt: "desc" },
-    take: 10,
-  });
-
-  const scheduledItems = scheduledLogs
-    .map((log) => {
-      const detail = (log.detail as Record<string, unknown> | null) ?? {};
-      const followUpAt = detail.followUpAt;
-      if (typeof followUpAt !== "string") return null;
-      const subject = typeof detail.subject === "string" ? detail.subject : undefined;
-      return { id: log.id, followUpAt, subject };
-    })
-    .filter(
-      (item): item is { id: string; followUpAt: string; subject: string | undefined } => item !== null
-    );
-
-  const suggestions = [
-    ...getScheduledFollowUps(scheduledItems),
-    ...getFollowUpSuggestions(tasks.map((item) => item.task)),
-  ].slice(0, 4);
 
   const greetingHour = new Date().getHours();
   const greeting = greetingHour < 12 ? "Good morning" : greetingHour < 18 ? "Good afternoon" : "Good evening";
@@ -187,12 +171,22 @@ export default async function DashboardPage({
         <div className={styles.dashboard}>
           <div className={`${styles.orb} ${styles.orbOne}`} data-motion="orb" />
           <div className={`${styles.orb} ${styles.orbTwo}`} data-motion="orb" />
-          <section className={styles.heroRow}>
+          <section className={styles.topHeader}>
             <div className={styles.greetingBlock}>
               <p className={styles.greetingKicker}>Execution layer</p>
               <h1 className={styles.greetingTitle}>{greeting}, Caleb</h1>
             </div>
-            <div className={styles.heroCommand}>
+            <div className={styles.summaryRow}>
+              <span className={styles.summaryItem}>0 Active Tasks</span>
+              <span className={styles.summaryDivider}>|</span>
+              <span className={styles.summaryItem}>0 Blocked</span>
+              <span className={styles.summaryDivider}>|</span>
+              <span className={styles.summaryItem}>Next Deadline: {nextDeadlineLabel}</span>
+            </div>
+          </section>
+
+          <section className={styles.commandCenter}>
+            <div className={styles.commandCenterInner}>
               <CommandBar />
             </div>
           </section>
@@ -213,17 +207,27 @@ export default async function DashboardPage({
       <div className={styles.dashboard}>
         <div className={`${styles.orb} ${styles.orbOne}`} data-motion="orb" />
         <div className={`${styles.orb} ${styles.orbTwo}`} data-motion="orb" />
-        <section className={styles.heroRow}>
+        <section className={styles.topHeader}>
           <div className={styles.greetingBlock}>
             <p className={styles.greetingKicker}>Execution layer</p>
             <h1 className={styles.greetingTitle}>{greeting}, Caleb</h1>
           </div>
-          <div className={styles.heroCommand}>
+          <div className={styles.summaryRow}>
+            <span className={styles.summaryItem}>{activeCount} Active Tasks</span>
+            <span className={styles.summaryDivider}>|</span>
+            <span className={styles.summaryItem}>{blockedCount} Blocked</span>
+            <span className={styles.summaryDivider}>|</span>
+            <span className={styles.summaryItem}>Next Deadline: {nextDeadlineLabel}</span>
+          </div>
+        </section>
+
+        <section className={styles.commandCenter}>
+          <div className={styles.commandCenterInner}>
             <CommandBar />
           </div>
         </section>
 
-        <section className={`${styles.mainGrid} ${suggestions.length === 0 ? styles.mainGridSingle : ""}`}>
+        <section className={styles.mainGrid}>
           <div className={styles.leftColumn}>
             <section data-motion="panel" className={styles.requestSection}>
               <div className={styles.requestHeader}>
@@ -258,12 +262,6 @@ export default async function DashboardPage({
               )}
             </section>
           </div>
-
-          {suggestions.length > 0 ? (
-            <div className={styles.rightColumn}>
-              <NotificationPanel suggestions={suggestions} />
-            </div>
-          ) : null}
         </section>
       </div>
     </DashboardMotion>

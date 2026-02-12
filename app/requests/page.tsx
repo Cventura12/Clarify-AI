@@ -93,7 +93,7 @@ export default async function RequestsPage({
         <p className="text-sm text-[var(--muted)]">Track every request and its current status.</p>
       </header>
 
-      <div className="sticky top-2 z-10 rounded-xl bg-[var(--app-main-bg)]/85 py-1 backdrop-blur">
+      <div className="sticky top-2 z-10 rounded-xl py-1">
         <div className="flex flex-wrap gap-2 text-xs">
           {[
             { label: "All", value: "all" },

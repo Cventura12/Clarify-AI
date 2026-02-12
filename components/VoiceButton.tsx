@@ -17,10 +17,12 @@ export function VoiceButton({
   onTranscript,
   onListeningChange,
   lang = "en-US",
+  className,
 }: {
   onTranscript: (text: string) => void;
   onListeningChange?: (listening: boolean) => void;
   lang?: string;
+  className?: string;
 }) {
   const [supported, setSupported] = useState(false);
   const [listening, setListening] = useState(false);
@@ -103,10 +105,12 @@ export function VoiceButton({
       }}
       aria-label={listening ? "Stop recording" : "Start recording"}
       aria-pressed={listening}
-      className="rounded-md border border-white/20 bg-white/5 px-3 py-2 text-xs font-semibold text-slate-200 transition hover:border-white/35 hover:bg-white/10"
+      className={
+        className ??
+        "rounded-md border border-white/20 bg-white/5 px-3 py-2 text-xs font-semibold text-slate-200 transition hover:border-white/35 hover:bg-white/10"
+      }
     >
       {listening ? "Stop" : "Voice"}
     </button>
   );
 }
-
