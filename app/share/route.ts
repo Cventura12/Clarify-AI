@@ -1,33 +1,52 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/db";
 import { createInterpretedRequest } from "@/lib/requests/create-interpreted-request";
+import { getR2Config, uploadToR2 } from "@/lib/storage/r2";
+
+export const runtime = "nodejs";
+
+type UploadedAttachment = {
+  name: string;
+  type: string;
+  size: number;
+  url: string;
+};
 
 type SharePayload = {
   title?: string;
   text?: string;
   url?: string;
-  fileNames: string[];
+  files: File[];
 };
+
+const MAX_FILE_BYTES = 15 * 1024 * 1024;
 
 const getString = (value: FormDataEntryValue | null) => {
   if (typeof value !== "string") return "";
   return value.trim();
 };
 
+const sanitizeFilename = (value: string) =>
+  value
+    .replace(/[^a-zA-Z0-9._-]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
+    .toLowerCase();
+
+const toKb = (size: number) => Math.max(1, Math.round(size / 1024));
+
 const collectFiles = (formData: FormData) => {
   const raw = [...formData.getAll("files"), ...formData.getAll("files[]")];
-  return raw
-    .filter((entry): entry is File => entry instanceof File)
-    .map((file) => file.name.trim())
-    .filter(Boolean);
+  return raw.filter((entry): entry is File => entry instanceof File && entry.size > 0);
 };
 
 const parseFormPayload = (formData: FormData): SharePayload => ({
   title: getString(formData.get("title")) || undefined,
   text: getString(formData.get("text")) || undefined,
   url: getString(formData.get("url")) || undefined,
-  fileNames: collectFiles(formData),
+  files: collectFiles(formData),
 });
 
 const parseJsonPayload = (value: unknown): SharePayload => {
@@ -36,22 +55,33 @@ const parseJsonPayload = (value: unknown): SharePayload => {
     title: typeof body.title === "string" ? body.title.trim() : undefined,
     text: typeof body.text === "string" ? body.text.trim() : undefined,
     url: typeof body.url === "string" ? body.url.trim() : undefined,
-    fileNames: Array.isArray(body.files)
-      ? body.files
-          .map((entry) => (typeof entry === "string" ? entry.trim() : ""))
-          .filter(Boolean)
-      : [],
+    files: [],
   };
 };
 
-const buildRawInput = ({ title, text, url, fileNames }: SharePayload) => {
+const buildRawInput = ({
+  title,
+  text,
+  url,
+  attachments,
+}: {
+  title?: string;
+  text?: string;
+  url?: string;
+  attachments: UploadedAttachment[];
+}) => {
   const parts: string[] = [];
   if (title) parts.push(`Title: ${title}`);
   if (text) parts.push(text);
   if (url) parts.push(`URL: ${url}`);
-  if (fileNames.length > 0) {
-    parts.push(`Attachments: ${fileNames.join(", ")}`);
+
+  if (attachments.length > 0) {
+    const list = attachments.map(
+      (item) => `- ${item.name} (${item.type || "application/octet-stream"}, ${toKb(item.size)} KB) - ${item.url}`
+    );
+    parts.push(`Attachments:\n${list.join("\n")}`);
   }
+
   return parts.join("\n\n").trim();
 };
 
@@ -63,6 +93,39 @@ const wantsJsonResponse = (request: Request) => {
 
 const redirectTo = (request: Request, path: string) =>
   NextResponse.redirect(new URL(path, request.url), { status: 303 });
+
+const uploadShareFiles = async (requestId: string, files: File[]) => {
+  if (files.length === 0) return [] as UploadedAttachment[];
+
+  const config = getR2Config();
+  if (!config) {
+    throw new Error("Storage is not configured. Set R2_* env vars before sharing files.");
+  }
+
+  const uploaded: UploadedAttachment[] = [];
+
+  for (let i = 0; i < files.length; i += 1) {
+    const file = files[i];
+    if (file.size > MAX_FILE_BYTES) {
+      throw new Error(`File too large: ${file.name}. Limit is ${Math.round(MAX_FILE_BYTES / 1024 / 1024)}MB.`);
+    }
+
+    const safeName = sanitizeFilename(file.name) || `attachment-${i + 1}`;
+    const key = `requests/${requestId}/${Date.now()}-${i}-${safeName}`;
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const contentType = file.type || "application/octet-stream";
+    const url = await uploadToR2(config, key, buffer, contentType);
+
+    uploaded.push({
+      name: file.name || safeName,
+      type: contentType,
+      size: file.size,
+      url,
+    });
+  }
+
+  return uploaded;
+};
 
 export async function GET(request: Request) {
   return redirectTo(request, "/");
@@ -87,8 +150,8 @@ export async function POST(request: Request) {
       ? parseJsonPayload(await request.json().catch(() => null))
       : parseFormPayload(await request.formData());
 
-    const input = buildRawInput(payload);
-    if (!input) {
+    const hasContent = Boolean(payload.title || payload.text || payload.url || payload.files.length > 0);
+    if (!hasContent) {
       if (returnJson) {
         return Response.json(
           { error: { message: "Share payload must include text, url, title, or files" } },
@@ -98,7 +161,41 @@ export async function POST(request: Request) {
       return redirectTo(request, "/");
     }
 
-    const created = await createInterpretedRequest({ userId, input });
+    const requestRecord = await prisma.request.create({
+      data: {
+        userId,
+        rawInput: payload.text?.trim() || payload.url?.trim() || payload.title?.trim() || "Shared content",
+      },
+      select: { id: true },
+    });
+
+    let uploadedAttachments: UploadedAttachment[] = [];
+    if (payload.files.length > 0) {
+      uploadedAttachments = await uploadShareFiles(requestRecord.id, payload.files);
+      await prisma.attachment.createMany({
+        data: uploadedAttachments.map((file) => ({
+          requestId: requestRecord.id,
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          url: file.url,
+        })),
+      });
+    }
+
+    const input = buildRawInput({
+      title: payload.title,
+      text: payload.text,
+      url: payload.url,
+      attachments: uploadedAttachments,
+    });
+
+    const created = await createInterpretedRequest({
+      userId,
+      input,
+      requestId: requestRecord.id,
+    });
+
     const requestPath = `/request/${created.requestId}`;
 
     if (returnJson) {
@@ -107,6 +204,7 @@ export async function POST(request: Request) {
           requestId: created.requestId,
           requestPath,
           fallback: created.fallback,
+          attachments: uploadedAttachments,
         },
         { status: 201 }
       );
@@ -116,7 +214,15 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("Share route error", error);
     if (returnJson) {
-      return Response.json({ error: { message: "Failed to process shared content" } }, { status: 500 });
+      return Response.json(
+        {
+          error: {
+            message:
+              error instanceof Error ? error.message : "Failed to process shared content",
+          },
+        },
+        { status: 500 }
+      );
     }
     return redirectTo(request, "/");
   }
